@@ -17,6 +17,29 @@ format:
 # Dataset Description
 
 # EDA
+```{r}
+library(ggplot2)
+library(tidyr)
+
+df <- read.csv("dataset/spotify-tracks-dataset.csv")
+head(df)
+```
+
+```{r}
+# Density plots for numeric audio features
+numeric_cols <- c("popularity", "danceability", "energy", "loudness",
+                  "speechiness", "acousticness", "instrumentalness",
+                  "liveness", "valence", "tempo")
+
+df_long <- pivot_longer(df[, numeric_cols], cols = everything(),
+                        names_to = "feature", values_to = "value")
+
+ggplot(df_long, aes(x = value)) +
+  geom_density(fill = "steelblue", alpha = 0.5) +
+  facet_wrap(~feature, scales = "free") +
+  labs(title = "Density of Numeric Features", x = NULL, y = "Density") +
+  theme_minimal()
+```
 
 # Model Selection
 
