@@ -1,0 +1,28 @@
+---
+title: "OSTA5003 Project Phase 1 Report"
+author:
+  - name: Yawei XI (550827289)
+    email: yaxi0006@uni.sydney.edu.au
+  - name: Yifeng LIN (87654321)
+    email: ylin0350@uni.sydney.edu.au
+format:
+    html:
+        embed-resources: true
+---
+
+# Introduction
+
+# Problem Statement
+
+# Dataset Description
+
+# EDA
+
+# Model Selection
+
+# Evaluation Metrics
+
+# Project Plan
+
+# Appendix
+[1] [Spotify Tracks Dataset](https://www.kaggle.com/datasets/maharshipandya/-spotify-tracks-dataset)
