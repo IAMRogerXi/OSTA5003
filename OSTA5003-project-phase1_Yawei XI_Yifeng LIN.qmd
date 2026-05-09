@@ -8,44 +8,81 @@ author:
 format:
     html:
         embed-resources: true
+        include-in-header:
+            text: |
+                <style>
+                .footnotes h2::before { content: 'Appendix'; }
+                .footnotes h2 { visibility: hidden; position: relative; }
+                .footnotes h2::before { visibility: visible; position: absolute; }
+                </style>
+    pdf:
+        documentclass: article
+execute:
+  message: false
+  warning: false
 ---
 
 # Introduction
+The modern music industry relies heavily on digital streaming platforms, where algorithms continuously analyze massive amounts of audio data to classify, recommend, and organize content. One of the fundamental challenges in this domain is accurately categorizing music into distinct genres based on its acoustic properties. This project focuses on the analysis of the Spotify Tracks dataset[^1], which contains 114,000 observations across 125 unique genres. The primary objective of this project is to build and evaluate a robust classification model capable of predicting the musical genre of a track using its continuous audio features, such as danceability, energy, acousticness, and tempo.
 
 # Problem Statement
+This project addresses a supervised multiclass classification problem. The objective is to predict the predefined, discrete categorical label track_genre (which consists of 125 distinct musical genres) for a given track, utilizing its underlying numeric and categorical audio features (such as danceability, energy, acousticness, etc.).
+
+This problem is interesting from both an analytical and a practical perspective. Analytically, musical genres are subjective, culturally defined categories. Attempting to map objective, mathematical audio signal measurements to these subjective human categories presents a significant modeling challenge, as many genres share highly overlapping acoustic profiles. Practically, solving this classification problem accurately is the foundational mechanism for modern algorithmic recommendation systems, enabling streaming platforms to automate music tagging, improve search accuracy, and generate personalized playlists for users without manual human intervention.
 
 # Dataset Description
+The dataset contains 114,000 samples and 21 columns (features). The columns consist of a mix of numeric and categorical data. Numeric features include continuous variables such as danceability, energy, loudness, speechiness, acousticness, instrumentalness, liveness, valence, tempo, duration_ms, and popularity. Categorical features include text strings such as track_id, artists, album_name, track_name, explicit, and the target variable track_genre.
 
-# EDA
+# Initial EDA
+In this section, the necessary libraries and the dataset are loaded. Then the exploratory data analysis (EDA) is performed to understand the basic structure and characteristics of the data.
 ```{r}
-library(ggplot2)
-library(tidyr)
+library(tidyverse)
+library(corrplot)
+library(visdat)
 
-df <- read.csv("dataset/spotify-tracks-dataset.csv")
-head(df)
+spotify_df <- read.csv("dataset/spotify-tracks-dataset.csv")
 ```
 
+### Dataset Overview
+The following demonstrates the scale of the dataset and the sample data of the features (Danceability, Energy, Loudness, Speechiness, Acousticness, Instrumentalness, Liveness, Valence, Tempo, etc).
 ```{r}
-# Density plots for numeric audio features
-numeric_cols <- c("popularity", "danceability", "energy", "loudness",
-                  "speechiness", "acousticness", "instrumentalness",
-                  "liveness", "valence", "tempo")
+glimpse(spotify_df)
+```
 
-df_long <- pivot_longer(df[, numeric_cols], cols = everything(),
-                        names_to = "feature", values_to = "value")
+### Missing Values
+The dataset contains no missing values, as confirmed by the following visualization.
+```{r}
+vis_miss(spotify_df, warn_large_data = FALSE)
+```
 
-ggplot(df_long, aes(x = value)) +
-  geom_density(fill = "steelblue", alpha = 0.5) +
-  facet_wrap(~feature, scales = "free") +
-  labs(title = "Density of Numeric Features", x = NULL, y = "Density") +
-  theme_minimal()
+### Target Imbalance
+Analysis of the target variable, track_genre, reveals that there are 114 distinct categories. Each category contains exactly 1,000 sample instances. The data is perfectly balanced across all classes.
+```{r}
+genre_counts <- spotify_df |> count(track_genre, sort = TRUE)
+
+head(genre_counts)
+tail(genre_counts)
 ```
 
 # Model Selection
+**Random Forest** is selected as the model for this classification task. This tree-based ensemble is highly effective at capturing non-linear relationships.
 
 # Evaluation Metrics
+To comprehensively evaluate the performance of our multiclass classification models across 114 genres, the following metrics will be applied:
+
+- **Accuracy:** the overall accuracy will be calculated to measure the total proportion of correctly predicted tracks across the entire dataset. It serves as a straightforward, high-level performance indicator.
+
+- **F1-Score:** F1-Score will be caculated for each of the 114 genres and then takes the average. This ensures that the model's performance on every single genre is evaluated equally.
+
+- **Confusion Matrix:** a confusion matrix will be generated to visualize the model's predictions against the true labels.
 
 # Project Plan
+- **Week 1:** Data Preparation: Finalize data cleaning and execute feature engineering.
 
-# Appendix
-[1] [Spotify Tracks Dataset](https://www.kaggle.com/datasets/maharshipandya/-spotify-tracks-dataset)
+- **Week 2:** Modeling & Optimization: Train Random Forest. Conduct hyperparameter tuning and extract feature importance scores.
+
+- **Week 3:** Evaluation & Analysis: Evaluate model results using the defined evaluation metrics and generate all necessary performance visualizations.
+
+- **Week 4:** Final Deliverables: Compile the findings into the final written report and prepare the slide deck for the final presentation.
+
+[^1]: [Spotify Tracks Dataset](https://www.kaggle.com/datasets/maharshipandya/-spotify-tracks-dataset) from Kaggle. This dataset is licensed under [Open Data Commons Open Database License (ODbL) v1.0](https://opendatacommons.org/licenses/odbl/1-0/).
