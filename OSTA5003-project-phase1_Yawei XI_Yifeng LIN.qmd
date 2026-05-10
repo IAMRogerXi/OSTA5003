@@ -11,29 +11,41 @@ format:
         include-in-header:
             text: |
                 <style>
-                .footnotes h2::before { content: 'Appendix'; }
-                .footnotes h2 { visibility: hidden; position: relative; }
-                .footnotes h2::before { visibility: visible; position: absolute; }
+                    body { font-family: 'Times New Roman', Times, serif; font-size: 10pt; }
+                    code, pre { font-family: 'Courier New', Courier, monospace; }
+                    h1, h2, h3, h4 { font-family: Helvetica, Arial, sans-serif; }
+                    .footnotes h2::before { content: 'Appendix'; }
+                    .footnotes h2 { visibility: hidden; position: relative; }
+                    .footnotes h2::before { visibility: visible; position: absolute; }
                 </style>
     pdf:
         documentclass: article
+        mainfont: "Times New Roman"
+        sansfont: "Helvetica"
+        monofont: "Courier New"
+        fontsize: 10pt
 execute:
   message: false
   warning: false
 ---
 
-# Introduction
+## Introduction
 The modern music industry relies heavily on digital streaming platforms, where algorithms continuously analyze massive amounts of audio data to classify, recommend, and organize content. One of the fundamental challenges in this domain is accurately categorizing music into distinct genres based on its acoustic properties. This project focuses on the analysis of the Spotify Tracks dataset[^1], which contains 114,000 observations across 125 unique genres. The primary objective of this project is to build and evaluate a robust classification model capable of predicting the musical genre of a track using its continuous audio features, such as danceability, energy, acousticness, and tempo.
 
-# Problem Statement
-This project addresses a supervised multiclass classification problem. The objective is to predict the predefined, discrete categorical label track_genre (which consists of 125 distinct musical genres) for a given track, utilizing its underlying numeric and categorical audio features (such as danceability, energy, acousticness, etc.).
+## Problem Statement
+This project is a supervised multiclass classification problem aiming to predict the track_genre (125 categories) of Spotify tracks using audio features. Accurately mapping objective acoustic measurements to subjective genres is challenging but essential for modern automated music recommendation systems.  
+**Potential Challenges:**  
+<ul>
+    <li>High Cardinality: Text features (artists, album_name) cause dimensionality explosion.</li>
+    <li>Multicollinearity: Features like energy and loudness are highly correlated.</li>
+    <li>Skewed Distributions: Features like speechiness are heavily right-skewed.</li>
+    <li>Overlapping Classes: Differentiating 125 acoustically similar genres is difficult.</li>
+</ul>
 
-This problem is interesting from both an analytical and a practical perspective. Analytically, musical genres are subjective, culturally defined categories. Attempting to map objective, mathematical audio signal measurements to these subjective human categories presents a significant modeling challenge, as many genres share highly overlapping acoustic profiles. Practically, solving this classification problem accurately is the foundational mechanism for modern algorithmic recommendation systems, enabling streaming platforms to automate music tagging, improve search accuracy, and generate personalized playlists for users without manual human intervention.
-
-# Dataset Description
+## Dataset Description
 The dataset contains 114,000 samples and 21 columns (features). The columns consist of a mix of numeric and categorical data. Numeric features include continuous variables such as danceability, energy, loudness, speechiness, acousticness, instrumentalness, liveness, valence, tempo, duration_ms, and popularity. Categorical features include text strings such as track_id, artists, album_name, track_name, explicit, and the target variable track_genre.
 
-# Initial EDA
+## Initial EDA
 In this section, the necessary libraries and the dataset are loaded. Then the exploratory data analysis (EDA) is performed to understand the basic structure and characteristics of the data.
 ```{r}
 library(tidyverse)
@@ -43,19 +55,19 @@ library(visdat)
 spotify_df <- read.csv("dataset/spotify-tracks-dataset.csv")
 ```
 
-### Dataset Overview
+#### Dataset Overview
 The following demonstrates the scale of the dataset and the sample data of the features (Danceability, Energy, Loudness, Speechiness, Acousticness, Instrumentalness, Liveness, Valence, Tempo, etc).
 ```{r}
 glimpse(spotify_df)
 ```
 
-### Missing Values
+#### Missing Values
 The dataset contains no missing values, as confirmed by the following visualization.
 ```{r}
 vis_miss(spotify_df, warn_large_data = FALSE)
 ```
 
-### Target Imbalance
+#### Target Imbalance
 Analysis of the target variable, track_genre, reveals that there are 114 distinct categories. Each category contains exactly 1,000 sample instances. The data is perfectly balanced across all classes.
 ```{r}
 genre_counts <- spotify_df |> count(track_genre, sort = TRUE)
@@ -64,25 +76,37 @@ head(genre_counts)
 tail(genre_counts)
 ```
 
-# Model Selection
-**Random Forest** is selected as the model for this classification task. This tree-based ensemble is highly effective at capturing non-linear relationships.
+## Model Selection
+**Random Forest** is selected as the model for this classification task. This tree-based ensemble is highly effective at capturing the complex, non-linear relationships between acoustic features and subjective musical genres. Given the dataset's complexity—comprising 114,000 samples across 125 distinct target classes—Random Forest is exceptionally well-suited. It naturally handles features with varying numeric scales without requiring extensive standardization. Furthermore, it is intrinsically robust against feature multicollinearity (such as the high correlation between energy and loudness) and effectively mitigates overfitting through its randomized ensemble approach, making it an optimal choice for this high-dimensional acoustic dataset.
 
-# Evaluation Metrics
-To comprehensively evaluate the performance of our multiclass classification models across 114 genres, the following metrics will be applied:
+## Evaluation Metrics
+To comprehensively evaluate the performance of our multiclass classification models across 114 genres, the following metrics will be applied:  
+<ul>
+    <li>**Accuracy:** the overall accuracy will be calculated to measure the total proportion of correctly predicted tracks across the entire dataset. It serves as a straightforward, high-level performance indicator.</li>
+    <li>**F1-Score:** F1-Score will be caculated for each of the 114 genres and then takes the average. This ensures that the model's performance on every single genre is evaluated equally.</li>
+    <li>**Confusion Matrix:** a confusion matrix will be generated to visualize the model's predictions against the true labels.</li>
+</ul>
 
-- **Accuracy:** the overall accuracy will be calculated to measure the total proportion of correctly predicted tracks across the entire dataset. It serves as a straightforward, high-level performance indicator.
+## Project Plan
+- **Week 1: Data Preparation**  
+Task: Finalize data cleaning and execute feature engineering.  
+Yawei XI: Responsible for feature engineering, including applying log transformations to skewed numeric features.  
+Yifeng LIN: Responsible for data cleaning.
 
-- **F1-Score:** F1-Score will be caculated for each of the 114 genres and then takes the average. This ensures that the model's performance on every single genre is evaluated equally.
+- **Week 2: Modeling & Optimization**  
+Task: Train Random Forest. Conduct hyperparameter tuning and extract feature importance scores.  
+Yawei XI: Responsible for conducting hyperparameter tuning and extracting feature importance scores.  
+Yifeng LIN: Responsible for building and training the initial Random Forest models.  
 
-- **Confusion Matrix:** a confusion matrix will be generated to visualize the model's predictions against the true labels.
+- **Week 3: Evaluation & Analysis**  
+Task: Evaluate model results using the defined evaluation metrics and generate all necessary performance visualizations.  
+Yawei XI: Responsible for computing and analyzing the core evaluation metrics.  
+Yifeng LIN: Responsible for generating performance visualizations, specifically the Confusion Matrix for error analysis.  
 
-# Project Plan
-- **Week 1:** Data Preparation: Finalize data cleaning and execute feature engineering.
-
-- **Week 2:** Modeling & Optimization: Train Random Forest. Conduct hyperparameter tuning and extract feature importance scores.
-
-- **Week 3:** Evaluation & Analysis: Evaluate model results using the defined evaluation metrics and generate all necessary performance visualizations.
-
-- **Week 4:** Final Deliverables: Compile the findings into the final written report and prepare the slide deck for the final presentation.
+- **Week 4: Final Deliverables**  
+Task: Compile the findings into the final written report and prepare the slide deck for the final presentation.  
+Yawei XI: Responsible for drafting, structuring, and formatting the final written report.  
+Yifeng LIN: Responsible for designing and preparing the presentation slide deck.  
+Both members will conduct a final review.  
 
 [^1]: [Spotify Tracks Dataset](https://www.kaggle.com/datasets/maharshipandya/-spotify-tracks-dataset) from Kaggle. This dataset is licensed under [Open Data Commons Open Database License (ODbL) v1.0](https://opendatacommons.org/licenses/odbl/1-0/).
