@@ -76,6 +76,38 @@ head(genre_counts)
 tail(genre_counts)
 ```
 
+```{r}
+p1 <- ggplot(spotify_df, aes(x = danceability)) +
+      geom_density(fill = "lightblue", alpha = 0.7) +
+      theme_minimal() +
+      labs(title = "Density Plot of Danceability", x = "Danceability", y = "Density")
+print(p1)
+```
+
+```{r}
+p2 <- ggplot(spotify_df, aes(x = speechiness)) +
+      geom_density(fill = "salmon", alpha = 0.7) +
+      theme_minimal() +
+      labs(title = "Density Plot of Speechiness (Right-Skewed)", x = "Speechiness", y = "Density")
+print(p2)
+```
+
+```{r}
+numeric_features <- spotify_df |> select(danceability, energy, loudness, speechiness, acousticness, instrumentalness, liveness, valence, tempo)
+         
+cor_matrix <- cor(numeric_features, use = "complete.obs")
+
+corrplot(cor_matrix, 
+         method = "color",
+         type = "upper",
+         addCoef.col = "black",
+         diag = FALSE,
+         tl.col = "black",
+         number.cex = 0.8,
+         title = "Correlation Heatmap of Audio Features",
+         mar = c(0,0,1,0))
+```
+
 ## Model Selection
 **Random Forest** is selected as the model for this classification task. This tree-based ensemble is highly effective at capturing the complex, non-linear relationships between acoustic features and subjective musical genres. Given the dataset's complexity—comprising 114,000 samples across 125 distinct target classes—Random Forest is exceptionally well-suited. It naturally handles features with varying numeric scales without requiring extensive standardization. Furthermore, it is intrinsically robust against feature multicollinearity (such as the high correlation between energy and loudness) and effectively mitigates overfitting through its randomized ensemble approach, making it an optimal choice for this high-dimensional acoustic dataset.
 
