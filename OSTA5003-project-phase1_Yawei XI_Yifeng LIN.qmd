@@ -18,28 +18,21 @@ format:
                     .footnotes h2 { visibility: hidden; position: relative; }
                     .footnotes h2::before { visibility: visible; position: absolute; }
                 </style>
-    pdf:
-        documentclass: article
-        mainfont: "Times New Roman"
-        sansfont: "Helvetica"
-        monofont: "Courier New"
-        fontsize: 10pt
 execute:
   message: false
   warning: false
 ---
 
 ## Introduction
-The modern music industry relies heavily on digital streaming platforms, where algorithms continuously analyze massive amounts of audio data to classify, recommend, and organize content. One of the fundamental challenges in this domain is accurately categorizing music into distinct genres based on its acoustic properties. This project focuses on the analysis of the Spotify Tracks dataset[^1], which contains 114,000 observations across 125 unique genres. The primary objective of this project is to build and evaluate a robust classification model capable of predicting the musical genre of a track using its continuous audio features, such as danceability, energy, acousticness, and tempo.
+The modern music industry relies heavily on digital streaming platforms, where algorithms continuously analyze massive amounts of audio data to classify, recommend, and organize content. One of the fundamental challenges in this domain is accurately categorizing music into distinct genres based on its acoustic properties. This project focuses on the analysis of the Spotify Tracks dataset[^1], which contains 114,000 observations across 114 unique genres. The primary objective of this project is to build and evaluate a robust classification model capable of predicting the musical genre of a track using its continuous audio features, such as danceability, energy, acousticness, and tempo.
 
 ## Problem Statement
-This project is a supervised multiclass classification problem aiming to predict the track_genre (125 categories) of Spotify tracks using audio features. Accurately mapping objective acoustic measurements to subjective genres is challenging but essential for modern automated music recommendation systems.  
+This project is a supervised multiclass classification problem aiming to predict the track_genre (114 categories) of Spotify tracks using audio features. Accurately mapping objective acoustic measurements to subjective genres is challenging but essential for modern automated music recommendation systems.  
 **Potential Challenges:**  
 <ul>
-    <li>High Cardinality: Text features (artists, album_name) cause dimensionality explosion.</li>
-    <li>Multicollinearity: Features like energy and loudness are highly correlated.</li>
-    <li>Skewed Distributions: Features like speechiness are heavily right-skewed.</li>
-    <li>Overlapping Classes: Differentiating 125 acoustically similar genres is difficult.</li>
+    <li>Feature Correlation: Features like energy and loudness are highly correlated.</li>
+    <li>Data Distributions: Features like speechiness are heavily right-skewed.</li>
+    <li>Overlapping Classes: Differentiating 114 acoustically similar genres is difficult.</li>
 </ul>
 
 ## Dataset Description
@@ -61,6 +54,11 @@ The following demonstrates the scale of the dataset and the sample data of the f
 glimpse(spotify_df)
 ```
 
+The genre column contains 114 unique categories.
+```{r}
+length(unique(spotify_df$track_genre))
+```
+
 #### Missing Values
 The dataset contains no missing values, as confirmed by the following visualization.
 ```{r}
@@ -76,25 +74,28 @@ head(genre_counts)
 tail(genre_counts)
 ```
 
+#### Feature Distributions
+Danceability exhibits an approximately normal distribution, whereas speechiness is severely right-skewed.
 ```{r}
-p1 <- ggplot(spotify_df, aes(x = danceability)) +
-      geom_density(fill = "lightblue", alpha = 0.7) +
-      theme_minimal() +
-      labs(title = "Density Plot of Danceability", x = "Danceability", y = "Density")
-print(p1)
+dp_danceability <- ggplot(spotify_df, aes(x = danceability)) +
+                   geom_density(fill = "lightblue", alpha = 0.7) +
+                   theme_minimal() +
+                   labs(title = "Density Plot of Danceability", x = "Danceability", y = "Density")
+print(dp_danceability)
 ```
 
 ```{r}
-p2 <- ggplot(spotify_df, aes(x = speechiness)) +
-      geom_density(fill = "salmon", alpha = 0.7) +
-      theme_minimal() +
-      labs(title = "Density Plot of Speechiness (Right-Skewed)", x = "Speechiness", y = "Density")
-print(p2)
+dp_speechiness <- ggplot(spotify_df, aes(x = speechiness)) +
+                  geom_density(fill = "salmon", alpha = 0.7) +
+                  theme_minimal() +
+                  labs(title = "Density Plot of Speechiness (Right-Skewed)", x = "Speechiness", y = "Density")
+print(dp_speechiness)
 ```
 
+#### Feature Correlation
+The heatmap illustrates the correlation between numeric features. Notably, energy and loudness exhibit a very high positive correlation.
 ```{r}
 numeric_features <- spotify_df |> select(danceability, energy, loudness, speechiness, acousticness, instrumentalness, liveness, valence, tempo)
-         
 cor_matrix <- cor(numeric_features, use = "complete.obs")
 
 corrplot(cor_matrix, 
@@ -104,12 +105,12 @@ corrplot(cor_matrix,
          diag = FALSE,
          tl.col = "black",
          number.cex = 0.8,
-         title = "Correlation Heatmap of Audio Features",
+         title = "Correlation Heatmap of Features",
          mar = c(0,0,1,0))
 ```
 
 ## Model Selection
-**Random Forest** is selected as the model for this classification task. This tree-based ensemble is highly effective at capturing the complex, non-linear relationships between acoustic features and subjective musical genres. Given the dataset's complexity—comprising 114,000 samples across 125 distinct target classes—Random Forest is exceptionally well-suited. It naturally handles features with varying numeric scales without requiring extensive standardization. Furthermore, it is intrinsically robust against feature multicollinearity (such as the high correlation between energy and loudness) and effectively mitigates overfitting through its randomized ensemble approach, making it an optimal choice for this high-dimensional acoustic dataset.
+**Random Forest** is selected as the model for this classification task. This tree-based ensemble is highly effective at capturing the complex, non-linear relationships between features and subjective musical genres. Given the dataset's complexity, comprising 114,000 samples across 114 distinct target classes, Random Forest is well-suited. It is robust against highly correlated features (such as the high correlation between energy and loudness) and effectively mitigates overfitting through its randomized ensemble approach, making it an optimal choice for this complex dataset.
 
 ## Evaluation Metrics
 To comprehensively evaluate the performance of our multiclass classification models across 114 genres, the following metrics will be applied:  
