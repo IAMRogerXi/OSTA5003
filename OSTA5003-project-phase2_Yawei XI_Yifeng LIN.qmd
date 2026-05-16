@@ -1,5 +1,24 @@
 ---
 title: "OSTA5003 Project"
-format: html
+author:
+  - name: Yawei XI (550827289)
+    email: yaxi0006@uni.sydney.edu.au
+  - name: Yifeng LIN (560316872)
+    email: ylin0350@uni.sydney.edu.au
+format:
+    html:
+        embed-resources: true
+        include-in-header:
+            text: |
+                <style>
+                    body { font-family: 'Times New Roman', Times, serif; font-size: 10pt; }
+                    code, pre { font-family: 'Courier New', Courier, monospace; }
+                    h1, h2, h3, h4 { font-family: Helvetica, Arial, sans-serif; }
+                    .footnotes h2::before { content: 'Appendix'; }
+                    .footnotes h2 { visibility: hidden; position: relative; }
+                    .footnotes h2::before { visibility: visible; position: absolute; }
+                </style>
+execute:
+  message: false
+  warning: false
 ---
-
