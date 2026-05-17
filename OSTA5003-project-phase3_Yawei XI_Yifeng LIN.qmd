@@ -22,3 +22,25 @@ execute:
   message: false
   warning: false
 ---
+
+
+## Overview of the problem
+aaa
+
+## Dataset description
+bbb
+
+## Initial data analysis/visualization of the data
+ccc
+
+## Feature engineering
+ddd
+
+## Classification algorithms used
+eee
+
+## Classification performance evaluation
+fff
+
+## Conclusion
+ggg
