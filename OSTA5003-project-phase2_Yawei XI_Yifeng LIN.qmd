@@ -26,11 +26,87 @@ execute:
   warning: false
 ---
 
-## Introduction
-abc
+## 1. Introduction
+### 1.1 Background of the Project
 
-## Problem Statement
-edf
 
-## Dataset Description
-ghi
+### 1.2 Phase 2 Objective
+
+
+### 1.3 Link to Phase 1 Plan
+
+## 2. Data Preparation
+### 2.1 Dataset Overview
+
+
+### 2.2 Feature Selection
+
+
+### 2.3 Data Cleaning
+
+
+### 2.4 Train-Test Split
+
+
+
+## 3. Methodology
+### 3.1 Model Choice - Random Forest
+
+
+### 3.2 Model Training Process
+
+
+### 3.3 Hyperparameter Settings
+
+
+## 4. Experimental Results
+### 4.1 Overall Performance Metrics
+
+
+### 4.2 Confusion Matrix
+
+
+### 4.3 Class-level Performance
+
+
+### 4.4 Feature Importance
+
+
+## 5. Discussion
+### 5.1 Model Strengthens
+
+
+### 5.2 Error Analysis from Confusion Matrix
+
+
+### 5.3 Limitaions
+
+
+### 5.4 Possible Improvements
+
+
+
+## 6. Conclusion
+
+
+## Project Plan
+- **Week 1: Data Preparation**  
+Task: Finalize data cleaning and execute feature engineering.  
+Yawei XI: Responsible for feature engineering, including applying log transformations to skewed numeric features.  
+Yifeng LIN: Responsible for data cleaning.
+
+- **Week 2: Modeling & Optimization**  
+Task: Train Random Forest. Conduct hyperparameter tuning and extract feature importance scores.  
+Yawei XI: Responsible for conducting hyperparameter tuning and extracting feature importance scores.  
+Yifeng LIN: Responsible for building and training the initial Random Forest models.  
+
+- **Week 3: Evaluation & Analysis**  
+Task: Evaluate model results using the defined evaluation metrics and generate all necessary performance visualizations.  
+Yawei XI: Responsible for computing and analyzing the core evaluation metrics.  
+Yifeng LIN: Responsible for generating performance visualizations, specifically the Confusion Matrix for error analysis.  
+
+- **Week 4: Final Deliverables**  
+Task: Compile the findings into the final written report and prepare the slide deck for the final presentation.  
+Yawei XI: Responsible for drafting, structuring, and formatting the final written report.  
+Yifeng LIN: Responsible for designing and preparing the presentation slide deck.  
+Both members will conduct a final review.
