@@ -1,11 +1,14 @@
 ---
-title: "OSTA5003 Project"
+title: "Spotify Tracks Genre Classification Approach"
+subtitle: "OSTA5003 Project Presentation"
 author:
   - name: Yawei XI (550827289)
     email: yaxi0006@uni.sydney.edu.au
   - name: Yifeng LIN (560316872)
     email: ylin0350@uni.sydney.edu.au
 format:
+    revealjs:
+        auto-slide: 20000
     html:
         embed-resources: true
         include-in-header:
@@ -22,3 +25,12 @@ execute:
   message: false
   warning: false
 ---
+
+## Introduction
+abc
+
+## Problem Statement
+edf
+
+## Dataset Description
+ghi
