@@ -24,22 +24,26 @@ execute:
 ---
 
 
-## Overview of the problem
+## Overview of the Problem
 aaa
 
-## Dataset description
-bbb
+## Dataset Description
+```{r}
+library(tidyverse)
 
-## Initial data analysis/visualization of the data
+spotify_df <- read.csv("dataset/spotify-tracks-dataset.csv")
+```
+
+## Initial Data Analysis and Visualization of the Data
 ccc
 
-## Feature engineering
+## Feature Engineering
 ddd
 
-## Classification algorithms used
+## Classification Algorithms Used
 eee
 
-## Classification performance evaluation
+## Classification Performance Evaluation
 fff
 
 ## Conclusion
