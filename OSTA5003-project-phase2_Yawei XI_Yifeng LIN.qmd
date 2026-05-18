@@ -28,7 +28,7 @@ execute:
 
 ## 1. Introduction
 ### 1.1 Background of the Project
-
+Music genre classification is a common machine learning task that aims to predict the category of a song based on its
 
 ### 1.2 Phase 2 Objective
 
@@ -37,46 +37,183 @@ execute:
 
 ## 2. Data Preparation
 ### 2.1 Dataset Overview
+```{r}
+library(tidyverse)
+library(caret)
+library(ranger)
+library(yardstick)
+library(ggplot2)
 
+# Load data
+spotify_df <- read.csv("dataset/spotify-tracks-dataset.csv")
+spotify_df|> dim()
+spotify_df|> str()
+spotify_df|> head
+```
 
 ### 2.2 Feature Selection
+```{r}
+feature_to_remove <- c("X","track_id", "artists", "album_name", "track_name")
+spotify_model <- spotify_df|>
+  select(-all_of(feature_to_remove))
 
+spotify_model|>str()
+```
 
 ### 2.3 Data Cleaning
+```{r}
+spotify_model <- spotify_model|>
+  drop_na()|>
+  mutate(
+    explicit = as.factor(explicit),
+    key = as.factor(key),
+    mode = as.factor(mode),
+    time_signature = as.factor(time_signature),
+    track_genre = as.factor(track_genre)
+  )
+
+sum(is.na(spotify_model))
+table(spotify_model$track_genre)[1:10]
+```
 
 
 ### 2.4 Train-Test Split
+```{r}
+train_index <- createDataPartition(
+  spotify_model$track_genre,
+  p = 0.8,
+)[[1]]
+train_dat <- spotify_model[train_index, ]
+test_dat <- spotify_model[-train_index, ]
 
+train_dat|> dim()
+test_dat|> dim()
+```
 
 
 ## 3. Methodology
-### 3.1 Model Choice - Random Forest
+### 3.1 Model Choice - Random Forest >>
+```{r}
+rf_formula <- track_genre ~.
+```
+
+### 3.2 Model Training Process >>
+```{r}
+set.seed(5003)
+
+rf_model<-ranger(
+  formula = rf_formula,
+  data = train_dat,
+  num.trees = 300,
+  mtry = floor(sqrt(ncol(train_dat) - 1)),
+  min.node.size = 5,
+  importance = "impurity",
+  classification = TRUE
+)
+
+rf_model
+```
+
+### 3.3 Hyperparameter Settings >>
+```{r}
+rf_model$num.trees
+rf_model$mtry
+rf_model$min.node.size
+```
 
 
-### 3.2 Model Training Process
+### 3.4 Evaluation Metrics
+```{r}
+rf_pred <- predict(rf_model, data = test_dat)
 
+test_results <- test_dat|>
+  mutate(
+    predicted_genre = rf_pred$predictions
+  )
 
-### 3.3 Hyperparameter Settings
+head(test_results)
+```
 
 
 ## 4. Experimental Results
-### 4.1 Overall Performance Metrics
+### 4.1 Overall Performance Metrics >>
+```{r}
+# Accuracy
+accuracy_result <- test_results|>
+  accuracy(
+    truth = track_genre,
+    estimate = predicted_genre
+  )
 
+accuracy_result
 
-### 4.2 Confusion Matrix
+# F1 score
+f1_result <- test_results|>
+  f_meas(
+    truth = track_genre,
+    estimate = predicted_genre,
+    estimator = "macro"
+  )
+f1_result
+```
 
+### 4.2 Confusion Matrix >>
+```{r}
+# Confusion Matrix
+cm_result <- test_results|>
+  conf_mat(
+    truth = track_genre,
+    estimate = predicted_genre
+  )
+
+cm_result
+```
+
+```{r}
+# Top 20 genres
+top_genres <- test_results|>
+  count(track_genre, sort = TRUE)|>
+  slice_head(n = 20)|>
+  pull(track_genre)
+
+test_top <- test_results|>
+  filter(
+    track_genre %in% top_genres,
+    predicted_genre %in% top_genres
+  )
+
+cm_top <- test_top|>
+  count(track_genre,predicted_genre)
+
+ggplot(cm_top, aes(x = predicted_genre, y = track_genre, fill = n)) +
+  geom_tile() +
+  labs(
+    title = "Confusion Matrix for Top 20 Genres",
+    x = "Predicted Genre",
+    y = "Actual Genre",
+    fill = "Count"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+```
 
 ### 4.3 Class-level Performance
-
+```{r}
+abc
+```
 
 ### 4.4 Feature Importance
-
+```{r}
+abc
+```
 
 ## 5. Discussion
 ### 5.1 Model Strengthens
 
 
-### 5.2 Error Analysis from Confusion Matrix
+### 5.2 Error Analysis from Confusion Matrix >>
 
 
 ### 5.3 Limitaions
