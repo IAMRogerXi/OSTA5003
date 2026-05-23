@@ -46,9 +46,9 @@ library(ggplot2)
 
 # Load data
 spotify_df <- read.csv("dataset/spotify-tracks-dataset.csv")
-spotify_df|> dim()
-spotify_df|> str()
-spotify_df|> head
+spotify_df |> dim()
+spotify_df |> str()
+spotify_df |> head()
 ```
 
 ### 2.2 Feature Selection
@@ -201,12 +201,10 @@ ggplot(cm_top, aes(x = predicted_genre, y = track_genre, fill = n)) +
 
 ### 4.3 Class-level Performance
 ```{r}
-abc
 ```
 
 ### 4.4 Feature Importance
 ```{r}
-abc
 ```
 
 ## 5. Discussion
