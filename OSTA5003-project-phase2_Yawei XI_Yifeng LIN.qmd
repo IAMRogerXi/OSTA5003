@@ -45,7 +45,7 @@ Phase 2 directly follows the project plan developed in Phase 1. In Phase 1, Rand
 
 Overall, this phase provides the first experimental results of the project and forms the foundation for future model improvement and refinement.
 
-## 2. Data Preparation
+## 2. EDA, Data Visualization, and Feature Engineering
 ### 2.1 Dataset Overview
 ```{r}
 #| echo: false
@@ -60,30 +60,25 @@ library(yardstick)
 spotify_df <- read.csv("dataset/spotify-tracks-dataset.csv")
 ```
 
+The Spotify Track Dataset was used in this project to predict the genre of a song based on its track-level and audio features. The target variable is `track_genre` which contains multiple genre categories. Therefore, this task is a multi-classifier task.
+The dataset obtains varies metadata includes numerical and descriptive data. Since the aim is to classify song based on measurable audio characteristcs, the model process would mainly focus on the numerical data.
 ```{r}
 # Load data
 spotify_df |> dim()
 spotify_df |> str()
 spotify_df |> head()
 ```
-The Spotify Track Dataset was used in this project to predict the genre of a song based on its track-level and audio features. The target variable is `track_genre` which contains multiple genre categories. Therefore, this task is a multi-classifier task.
-The dataset obtains varies metadata includes numerical and descriptive data. Since the aim is to classify song based on measurable audio characteristcs, the model process would mainly focus on the numerical data.
 
-## 2.2 Feature Selection
+## 2.2 Data Cleaning
 ```{r}
-feature_to_remove <- c("X","track_id", "artists", "album_name", "track_name")
-spotify_model <- spotify_df|>
-  select(-all_of(feature_to_remove))
+#| echo: false
 
-spotify_model|>str()
+spotify_model <- spotify_df 
 ```
-Feature selection was applied to remove variables that were not suitable for the initial Random Forest model. The features such as `track_id`,`artist`, `album_name` and `track_name` do not represent general audio patterns and may reduce the generalisability of the model. Also, the column `X` a default column number whilst read csv. Thus, they were excluded.
-The rest of variable were retained because they describe measurable musical and and audio characteristics that may help distinguish between genres
 
-## 2.3 Data Cleaning
 ```{r}
-spotify_model <- spotify_model|>
-  drop_na()|>
+spotify_model <- spotify_model |>
+  drop_na() |>
   mutate(
     explicit = as.factor(explicit),
     key = as.factor(key),
@@ -96,6 +91,16 @@ sum(is.na(spotify_model))
 table(spotify_model$track_genre)[1:10]
 ```
 The data cleaning process included examine missing values, confirming correct data types and check the class balance. Missing values in the selected modelling were handled before model training.
+
+## 2.3 Feature Selection
+```{r}
+feature_to_remove <- c("X","track_id", "artists", "album_name", "track_name")
+spotify_model <- spotify_model |> select(-all_of(feature_to_remove))
+
+spotify_model |> str()
+```
+Feature selection was applied to remove variables that were not suitable for the initial Random Forest model. The features such as `track_id`,`artist`, `album_name` and `track_name` do not represent general audio patterns and may reduce the generalisability of the model. Also, the column `X` a default column number whilst read csv. Thus, they were excluded.
+The rest of variable were retained because they describe measurable musical and and audio characteristics that may help distinguish between genres
 
 ## 2.4 Train-Test Split
 ```{r}
@@ -113,7 +118,7 @@ After cleaning, the dataset was divided into training and testing sets. The trai
 An 80/20 train-set split was used, and a random seed was set to ensure reproducibility.
 
 ## 3. Methodology
-### 3.1 Model Choice - Random Forest >>
+### 3.1 Model Choice - Random Forest
 ```{r}
 rf_formula <- track_genre ~.
 ```
@@ -123,7 +128,7 @@ Compare with single decision tree, Random Forest can reduce overfitting and impr
 
 This model is suitable for the Spotify genre classification task because the target variable `track_genre` contains multiple genre categories. Random Forest can handle multiclass classification directly can capture non-linear relationships between audio features and music genres.
 
-## 3.2 Model Training Process >>
+## 3.2 Model Training Process
 ```{r}
 set.seed(5003)
 
@@ -158,7 +163,7 @@ The Random Forest training output showed an out-of-bag prediction error of 67.48
 
 Overall, the Random Forest model was successfully trained using 91,200 observations and 15 predictors. The next step is to evaluate the model on the testing dataset using accuracy, F1-score, confusion matrix, and class-level performance measures.
 
-## 3.3 Hyperparameter Settings >>
+## 3.3 Hyperparameter Settings
 ```{r}
 rf_model$num.trees
 rf_model$mtry
@@ -182,7 +187,7 @@ head(test_results)
 ```
 
 
-## 4. Experimental Results
+## 4. Performance Evaluation
 ### 4.1 Overall Performance Metrics
 After generating predictions on the testing dataset, the overall performance of the Random Forest model was evaluated using accuracy and macro F1-score.
 ```{r}
@@ -315,31 +320,8 @@ Overall, the error analysis confirms that the main weakness of the initial Rando
 ## 5.3 Limitaions
 
 
-## 5.4 Possible Improvements
+## 5.4 Future Work
 
 
 
 ## 6. Conclusion
-
-
-## Project Plan
-- **Week 1: Data Preparation**  
-Task: Finalize data cleaning and execute feature engineering.  
-Yawei XI: Responsible for feature engineering, including applying log transformations to skewed numeric features.  
-Yifeng LIN: Responsible for data cleaning.
-
-- **Week 2: Modeling & Optimization**  
-Task: Train Random Forest. Conduct hyperparameter tuning and extract feature importance scores.  
-Yawei XI: Responsible for conducting hyperparameter tuning and extracting feature importance scores.  
-Yifeng LIN: Responsible for building and training the initial Random Forest models.  
-
-- **Week 3: Evaluation & Analysis**  
-Task: Evaluate model results using the defined evaluation metrics and generate all necessary performance visualizations.  
-Yawei XI: Responsible for computing and analyzing the core evaluation metrics.  
-Yifeng LIN: Responsible for generating performance visualizations, specifically the Confusion Matrix for error analysis.  
-
-- **Week 4: Final Deliverables**  
-Task: Compile the findings into the final written report and prepare the slide deck for the final presentation.  
-Yawei XI: Responsible for drafting, structuring, and formatting the final written report.  
-Yifeng LIN: Responsible for designing and preparing the presentation slide deck.  
-Both members will conduct a final review.

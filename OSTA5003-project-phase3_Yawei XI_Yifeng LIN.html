@@ -2241,8 +2241,8 @@ h1, h2, h3, h4 { font-family: Helvetica, Arial, sans-serif; }
 </header>
 
 
-<section id="overview-of-the-problem" class="level2">
-<h2 class="anchored" data-anchor-id="overview-of-the-problem">Overview of the Problem</h2>
+<section id="problem-statement" class="level2">
+<h2 class="anchored" data-anchor-id="problem-statement">Problem Statement</h2>
 <p>The modern music industry relies heavily on digital streaming platforms, where algorithms continuously analyze massive amounts of audio data to classify, recommend, and organize content. One of the fundamental challenges in this domain is accurately categorizing music into distinct genres based on its acoustic properties. This project focuses on the analysis of the Spotify Tracks dataset<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>, which contains 114,000 observations across 114 unique genres. The primary objective of this project is to build and evaluate a robust classification model capable of predicting the musical genre of a track using its continuous audio features, such as danceability, energy, acousticness, and tempo.</p>
 </section>
 <section id="dataset-description" class="level2">
@@ -2320,8 +2320,8 @@ h1, h2, h3, h4 { font-family: Helvetica, Arial, sans-serif; }
 <li>Text features: track_id, artists, album_name, track_name</li>
 </ul>
 </section>
-<section id="initial-data-analysis-and-visualization-of-the-data" class="level2">
-<h2 class="anchored" data-anchor-id="initial-data-analysis-and-visualization-of-the-data">Initial Data Analysis and Visualization of the Data</h2>
+<section id="exploratory-data-analysis-eda-and-data-visualization" class="level2">
+<h2 class="anchored" data-anchor-id="exploratory-data-analysis-eda-and-data-visualization">Exploratory Data Analysis (EDA) and Data Visualization</h2>
 <section id="feature-correlation" class="level4">
 <h4 class="anchored" data-anchor-id="feature-correlation">Feature Correlation</h4>
 <p>Pearson correlation heatmap of the numeric features:</p>
@@ -2361,6 +2361,13 @@ h1, h2, h3, h4 { font-family: Helvetica, Arial, sans-serif; }
 </section>
 <section id="feature-engineering" class="level2">
 <h2 class="anchored" data-anchor-id="feature-engineering">Feature Engineering</h2>
+<p>Feature engineering is applied to improve the representativeness of features for genre classification. This stage involves three steps:</p>
+<ol type="1">
+<li>data cleaning to remove noise and ensure correct data types</li>
+<li>data transformation to extract additional informative features from text fields</li>
+<li>dimensionality reduction via Principal Component Analysis (PCA) to consolidate correlated numeric features.</li>
+</ol>
+<p>Together, these steps produced a refined feature set that balances information content with model efficiency.</p>
 <section id="data-cleaning" class="level4">
 <h4 class="anchored" data-anchor-id="data-cleaning">Data Cleaning</h4>
 <div class="cell">
@@ -2533,8 +2540,8 @@ duration_ms      -0.041  0.405 -0.186  0.567 -0.205 -0.651</code></pre>
 <span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">seed          =</span> <span class="dv">42</span></span>
 <span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Growing trees.. Progress: 41%. Estimated remaining time: 44 seconds.
-Growing trees.. Progress: 80%. Estimated remaining time: 15 seconds.</code></pre>
+<pre><code>Growing trees.. Progress: 42%. Estimated remaining time: 42 seconds.
+Growing trees.. Progress: 84%. Estimated remaining time: 11 seconds.</code></pre>
 </div>
 </div>
 </section>

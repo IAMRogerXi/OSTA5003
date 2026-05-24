@@ -40,7 +40,7 @@ library(xgboost)
 spotify_df <- read.csv("dataset/spotify-tracks-dataset.csv")
 ```
 
-## Overview of the Problem
+## Problem Statement
 The modern music industry relies heavily on digital streaming platforms, where algorithms continuously analyze massive amounts of audio data to classify, recommend, and organize content. One of the fundamental challenges in this domain is accurately categorizing music into distinct genres based on its acoustic properties. This project focuses on the analysis of the Spotify Tracks dataset[^1], which contains 114,000 observations across 114 unique genres. The primary objective of this project is to build and evaluate a robust classification model capable of predicting the musical genre of a track using its continuous audio features, such as danceability, energy, acousticness, and tempo.
 
 ## Dataset Description
@@ -81,7 +81,7 @@ Group of these features:
 - Ordinal data features: None
 - Text features: track_id, artists, album_name, track_name
 
-## Initial Data Analysis and Visualization of the Data
+## Exploratory Data Analysis (EDA) and Data Visualization
 #### Feature Correlation
 Pearson correlation heatmap of the numeric features:
 ```{r}
@@ -106,6 +106,14 @@ assocstats(table(spotify_df$mode, spotify_df$time_signature))$cramer
 ```
 
 ## Feature Engineering
+Feature engineering is applied to improve the representativeness of features for genre classification. This stage involves three steps:
+
+1. Data Cleaning - remove noise and ensure correct data types
+2. Data Transformation - extract additional informative features from text fields
+3. Dimensionality Reduction - utilize Principal Component Analysis (PCA) to consolidate correlated numeric features
+
+Together, these steps produced a refined feature set that balances information content with model efficiency.
+
 #### Data Cleaning
 ```{r}
 spotify_df <- spotify_df[, -c(1, 2)]
