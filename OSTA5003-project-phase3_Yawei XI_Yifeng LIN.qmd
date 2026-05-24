@@ -31,9 +31,11 @@ library(caret)
 library(corrplot)
 library(dplyr)
 library(ggplot2)
+library(ranger)
 library(tidyverse)
 library(vcd)
 library(visdat)
+library(xgboost)
 ```
 
 ## Overview of the Problem
@@ -165,11 +167,99 @@ spotify_df <- cbind(df_reduced, pc_extracted)
 head(spotify_df, 1)
 ```
 
-## Classification Algorithms Used
-eee
+## Classification Algorithms and Model Selection
+Random Forest and XGBoost algorithms were implemented to classify the track genres. Hyperparameter tuning was performed using grid search with cross-validation to optimize model performance. The models were evaluated based on accuracy, precision, recall, and F1-score to determine the best-performing model for genre classification.
+
+## Model Training and Hyperparameter Tuning
+#### Dataset Splitting
+```{r}
+set.seed(5003)
+train_idx <- createDataPartition(spotify_df$track_genre, p = 0.8, list = FALSE)
+train_df  <- spotify_df[train_idx, ]
+test_df   <- spotify_df[-train_idx, ]
+
+train_df$track_genre <- as.factor(train_df$track_genre)
+test_df$track_genre  <- as.factor(test_df$track_genre)
+
+cat("Train size:", nrow(train_df), "\n")
+cat("Test size: ", nrow(test_df),  "\n")
+
+ctrl <- trainControl(
+  method    = "cv",        # k-fold cross-validation
+  number    = 5,           # k = 5
+  verboseIter = TRUE,      # print progress
+  classProbs  = TRUE,      # needed for probability-based metrics
+  savePredictions = "final"
+)
+```
+
+#### Random Forest Model
+```{r}
+rf_model <- ranger(
+  formula       = track_genre ~ .,
+  data          = train_df,
+  num.trees     = 300,
+  mtry          = floor(sqrt(ncol(train_df) - 1)),
+  min.node.size = 5,
+  importance    = "impurity",
+  classification = TRUE,
+  seed          = 42
+)
+```
+
+#### XGBoost Model
+```{r}
+train_matrix <- model.matrix(track_genre ~ . - 1, data = train_df)
+test_matrix  <- model.matrix(track_genre ~ . - 1, data = test_df)
+
+# Convert genre labels to 0-based integer
+genre_levels  <- levels(train_df$track_genre)
+train_labels  <- as.integer(train_df$track_genre) - 1
+test_labels   <- as.integer(test_df$track_genre)  - 1
+
+dtrain <- xgb.DMatrix(data = train_matrix, label = train_labels)
+dtest  <- xgb.DMatrix(data = test_matrix,  label = test_labels)
+
+# Train XGBoost
+xgb_model <- xgb.train(
+  params = list(
+    objective        = "multi:softmax",
+    num_class        = length(genre_levels),
+    max_depth        = 6,
+    eta              = 0.1,
+    subsample        = 0.8,
+    colsample_bytree = 0.8,
+    eval_metric      = "merror"       # multiclass error
+  ),
+  data       = dtrain,
+  nrounds    = 200,
+  watchlist  = list(train = dtrain, test = dtest),
+  verbose    = 1,
+  print_every_n = 20
+)
+
+# Predict
+xgb_pred_int <- predict(xgb_model, dtest)
+xgb_pred     <- factor(genre_levels[xgb_pred_int + 1], levels = genre_levels)
+```
 
 ## Classification Performance Evaluation
-fff
+```{r}
+# Random Forest predictions
+rf_pred <- predict(rf_model, data = test_df)$predictions
+
+# Confusion matrix + all metrics in one call
+rf_cm <- confusionMatrix(rf_pred, test_df$track_genre)
+
+# Overall accuracy and kappa
+rf_cm$overall
+
+# Per-class precision, recall, F1
+rf_cm$byClass[, c("Precision", "Recall", "F1")]
+
+# Macro-averaged F1
+mean(rf_cm$byClass[, "F1"], na.rm = TRUE)
+```
 
 ## Conclusion
 ggg

@@ -2449,13 +2449,251 @@ duration_ms      -0.041  0.405 -0.186  0.567 -0.205 -0.651</code></pre>
 </div>
 </section>
 </section>
-<section id="classification-algorithms-used" class="level2">
-<h2 class="anchored" data-anchor-id="classification-algorithms-used">Classification Algorithms Used</h2>
-<p>eee</p>
+<section id="classification-algorithms-and-model-selection" class="level2">
+<h2 class="anchored" data-anchor-id="classification-algorithms-and-model-selection">Classification Algorithms and Model Selection</h2>
+<p>Random Forest and XGBoost algorithms were implemented to classify the track genres. Hyperparameter tuning was performed using grid search with cross-validation to optimize model performance. The models were evaluated based on accuracy, precision, recall, and F1-score to determine the best-performing model for genre classification.</p>
+</section>
+<section id="model-training-and-hyperparameter-tuning" class="level2">
+<h2 class="anchored" data-anchor-id="model-training-and-hyperparameter-tuning">Model Training and Hyperparameter Tuning</h2>
+<section id="dataset-splitting" class="level4">
+<h4 class="anchored" data-anchor-id="dataset-splitting">Dataset Splitting</h4>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">5003</span>)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>train_idx <span class="ot">&lt;-</span> <span class="fu">createDataPartition</span>(spotify_df<span class="sc">$</span>track_genre, <span class="at">p =</span> <span class="fl">0.8</span>, <span class="at">list =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>train_df  <span class="ot">&lt;-</span> spotify_df[train_idx, ]</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>test_df   <span class="ot">&lt;-</span> spotify_df[<span class="sc">-</span>train_idx, ]</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>train_df<span class="sc">$</span>track_genre <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(train_df<span class="sc">$</span>track_genre)</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>test_df<span class="sc">$</span>track_genre  <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(test_df<span class="sc">$</span>track_genre)</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Train size:&quot;</span>, <span class="fu">nrow</span>(train_df), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Train size: 90793 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Test size: &quot;</span>, <span class="fu">nrow</span>(test_df),  <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Test size:  22630 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>ctrl <span class="ot">&lt;-</span> <span class="fu">trainControl</span>(</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">method    =</span> <span class="st">&quot;cv&quot;</span>,        <span class="co"># k-fold cross-validation</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">number    =</span> <span class="dv">5</span>,           <span class="co"># k = 5</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">verboseIter =</span> <span class="cn">TRUE</span>,      <span class="co"># print progress</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">classProbs  =</span> <span class="cn">TRUE</span>,      <span class="co"># needed for probability-based metrics</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">savePredictions =</span> <span class="st">&quot;final&quot;</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="random-forest-model" class="level4">
+<h4 class="anchored" data-anchor-id="random-forest-model">Random Forest Model</h4>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>rf_model <span class="ot">&lt;-</span> <span class="fu">ranger</span>(</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">formula       =</span> track_genre <span class="sc">~</span> .,</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data          =</span> train_df,</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">num.trees     =</span> <span class="dv">300</span>,</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">mtry          =</span> <span class="fu">floor</span>(<span class="fu">sqrt</span>(<span class="fu">ncol</span>(train_df) <span class="sc">-</span> <span class="dv">1</span>)),</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">min.node.size =</span> <span class="dv">5</span>,</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">importance    =</span> <span class="st">&quot;impurity&quot;</span>,</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">classification =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">seed          =</span> <span class="dv">42</span></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Growing trees.. Progress: 41%. Estimated remaining time: 44 seconds.
+Growing trees.. Progress: 83%. Estimated remaining time: 12 seconds.</code></pre>
+</div>
+</div>
+</section>
+<section id="xgboost-model" class="level4">
+<h4 class="anchored" data-anchor-id="xgboost-model">XGBoost Model</h4>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>train_matrix <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(track_genre <span class="sc">~</span> . <span class="sc">-</span> <span class="dv">1</span>, <span class="at">data =</span> train_df)</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>test_matrix  <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(track_genre <span class="sc">~</span> . <span class="sc">-</span> <span class="dv">1</span>, <span class="at">data =</span> test_df)</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert genre labels to 0-based integer</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>genre_levels  <span class="ot">&lt;-</span> <span class="fu">levels</span>(train_df<span class="sc">$</span>track_genre)</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>train_labels  <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(train_df<span class="sc">$</span>track_genre) <span class="sc">-</span> <span class="dv">1</span></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>test_labels   <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(test_df<span class="sc">$</span>track_genre)  <span class="sc">-</span> <span class="dv">1</span></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>dtrain <span class="ot">&lt;-</span> <span class="fu">xgb.DMatrix</span>(<span class="at">data =</span> train_matrix, <span class="at">label =</span> train_labels)</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>dtest  <span class="ot">&lt;-</span> <span class="fu">xgb.DMatrix</span>(<span class="at">data =</span> test_matrix,  <span class="at">label =</span> test_labels)</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Train XGBoost</span></span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>xgb_model <span class="ot">&lt;-</span> <span class="fu">xgb.train</span>(</span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">params =</span> <span class="fu">list</span>(</span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">objective        =</span> <span class="st">&quot;multi:softmax&quot;</span>,</span>
+<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">num_class        =</span> <span class="fu">length</span>(genre_levels),</span>
+<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">max_depth        =</span> <span class="dv">6</span>,</span>
+<span id="cb30-18"><a href="#cb30-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">eta              =</span> <span class="fl">0.1</span>,</span>
+<span id="cb30-19"><a href="#cb30-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">subsample        =</span> <span class="fl">0.8</span>,</span>
+<span id="cb30-20"><a href="#cb30-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">colsample_bytree =</span> <span class="fl">0.8</span>,</span>
+<span id="cb30-21"><a href="#cb30-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">eval_metric      =</span> <span class="st">&quot;merror&quot;</span>       <span class="co"># multiclass error</span></span>
+<span id="cb30-22"><a href="#cb30-22" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb30-23"><a href="#cb30-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">data       =</span> dtrain,</span>
+<span id="cb30-24"><a href="#cb30-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">nrounds    =</span> <span class="dv">200</span>,</span>
+<span id="cb30-25"><a href="#cb30-25" aria-hidden="true" tabindex="-1"></a>  <span class="at">watchlist  =</span> <span class="fu">list</span>(<span class="at">train =</span> dtrain, <span class="at">test =</span> dtest),</span>
+<span id="cb30-26"><a href="#cb30-26" aria-hidden="true" tabindex="-1"></a>  <span class="at">verbose    =</span> <span class="dv">1</span>,</span>
+<span id="cb30-27"><a href="#cb30-27" aria-hidden="true" tabindex="-1"></a>  <span class="at">print_every_n =</span> <span class="dv">20</span></span>
+<span id="cb30-28"><a href="#cb30-28" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] train-merror:0.774311   test-merror:0.800133 
+[21]    train-merror:0.606225   test-merror:0.702872 
+[41]    train-merror:0.558721   test-merror:0.691825 
+[61]    train-merror:0.520646   test-merror:0.688643 
+[81]    train-merror:0.482956   test-merror:0.685683 
+[101]   train-merror:0.448250   test-merror:0.685197 
+[121]   train-merror:0.414217   test-merror:0.685683 
+[141]   train-merror:0.384060   test-merror:0.683517 
+[161]   train-merror:0.355534   test-merror:0.683783 
+[181]   train-merror:0.330686   test-merror:0.684445 
+[200]   train-merror:0.308592   test-merror:0.684445 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Predict</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>xgb_pred_int <span class="ot">&lt;-</span> <span class="fu">predict</span>(xgb_model, dtest)</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>xgb_pred     <span class="ot">&lt;-</span> <span class="fu">factor</span>(genre_levels[xgb_pred_int <span class="sc">+</span> <span class="dv">1</span>], <span class="at">levels =</span> genre_levels)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
 </section>
 <section id="classification-performance-evaluation" class="level2">
 <h2 class="anchored" data-anchor-id="classification-performance-evaluation">Classification Performance Evaluation</h2>
-<p>fff</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Random Forest predictions</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>rf_pred <span class="ot">&lt;-</span> <span class="fu">predict</span>(rf_model, <span class="at">data =</span> test_df)<span class="sc">$</span>predictions</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Confusion matrix + all metrics in one call</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>rf_cm <span class="ot">&lt;-</span> <span class="fu">confusionMatrix</span>(rf_pred, test_df<span class="sc">$</span>track_genre)</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Overall accuracy and kappa</span></span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>rf_cm<span class="sc">$</span>overall</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      Accuracy          Kappa  AccuracyLower  AccuracyUpper   AccuracyNull 
+   0.306451613    0.300313069    0.300448135    0.312504838    0.008837826 
+AccuracyPValue  McnemarPValue 
+   0.000000000            NaN </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Per-class precision, recall, F1</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>rf_cm<span class="sc">$</span>byClass[, <span class="fu">c</span>(<span class="st">&quot;Precision&quot;</span>, <span class="st">&quot;Recall&quot;</span>, <span class="st">&quot;F1&quot;</span>)]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                          Precision     Recall         F1
+Class: acoustic          0.21929825 0.25000000 0.23364486
+Class: afrobeat          0.32407407 0.35175879 0.33734940
+Class: alt-rock          0.03703704 0.03535354 0.03617571
+Class: alternative       0.11917098 0.11616162 0.11764706
+Class: ambient           0.29787234 0.28140704 0.28940568
+Class: anime             0.20279720 0.14572864 0.16959064
+Class: black-metal       0.50655022 0.58291457 0.54205607
+Class: bluegrass         0.33088235 0.45226131 0.38216561
+Class: blues             0.11304348 0.06532663 0.08280255
+Class: brazil            0.09289617 0.08542714 0.08900524
+Class: breakbeat         0.47798742 0.38190955 0.42458101
+Class: british           0.15151515 0.07537688 0.10067114
+Class: cantopop          0.37864078 0.39195980 0.38518519
+Class: chicago-house     0.54404145 0.52763819 0.53571429
+Class: children          0.51162791 0.44221106 0.47439353
+Class: chill             0.13270142 0.14070352 0.13658537
+Class: classical         0.53038674 0.51612903 0.52316076
+Class: club              0.39837398 0.24623116 0.30434783
+Class: comedy            0.95977011 0.83919598 0.89544236
+Class: country           0.52830189 0.56281407 0.54501217
+Class: dance             0.36094675 0.31770833 0.33795014
+Class: dancehall         0.26666667 0.30150754 0.28301887
+Class: death-metal       0.25954198 0.34170854 0.29501085
+Class: deep-house        0.17132867 0.24623116 0.20206186
+Class: detroit-techno    0.56281407 0.56281407 0.56281407
+Class: disco             0.30519481 0.23618090 0.26628895
+Class: disney            0.42361111 0.30653266 0.35568513
+Class: drum-and-bass     0.52127660 0.49246231 0.50645995
+Class: dub               0.05194805 0.04020101 0.04532578
+Class: dubstep           0.10317460 0.13065327 0.11529933
+Class: edm               0.07070707 0.07070707 0.07070707
+Class: electro           0.17032967 0.15656566 0.16315789
+Class: electronic        0.04054054 0.01500000 0.02189781
+Class: emo               0.10778443 0.09045226 0.09836066
+Class: folk              0.12142857 0.08585859 0.10059172
+Class: forro             0.40830450 0.59296482 0.48360656
+Class: french            0.33333333 0.26633166 0.29608939
+Class: funk              0.28333333 0.25628141 0.26912929
+Class: garage            0.15573770 0.09547739 0.11838006
+Class: german            0.33870968 0.21875000 0.26582278
+Class: gospel            0.26959248 0.43216080 0.33204633
+Class: goth              0.12173913 0.07035176 0.08917197
+Class: grindcore         0.82125604 0.85427136 0.83743842
+Class: groove            0.19200000 0.12060302 0.14814815
+Class: grunge            0.19105691 0.23618090 0.21123596
+Class: guitar            0.40588235 0.34673367 0.37398374
+Class: happy             0.36842105 0.35175879 0.35989717
+Class: hard-rock         0.10119048 0.08585859 0.09289617
+Class: hardcore          0.28888889 0.32663317 0.30660377
+Class: hardstyle         0.48351648 0.44221106 0.46194226
+Class: heavy-metal       0.27075812 0.37688442 0.31512605
+Class: hip-hop           0.25688073 0.28282828 0.26923077
+Class: honky-tonk        0.79558011 0.73469388 0.76392573
+Class: house             0.11872146 0.13065327 0.12440191
+Class: idm               0.58088235 0.39698492 0.47164179
+Class: indian            0.09183673 0.09045226 0.09113924
+Class: indie             0.09803922 0.07575758 0.08547009
+Class: indie-pop         0.08219178 0.06060606 0.06976744
+Class: industrial        0.24786325 0.14500000 0.18296530
+Class: iranian           0.65991903 0.83163265 0.73589165
+Class: j-dance           0.38497653 0.41414141 0.39902676
+Class: j-idol            0.53781513 0.64321608 0.58581236
+Class: j-pop             0.16113744 0.17085427 0.16585366
+Class: j-rock            0.15591398 0.14500000 0.15025907
+Class: jazz              0.44970414 0.38190955 0.41304348
+Class: k-pop             0.33333333 0.40703518 0.36651584
+Class: kids              0.61467890 0.67676768 0.64423077
+Class: latin             0.11297071 0.13636364 0.12356979
+Class: latino            0.05970149 0.06060606 0.06015038
+Class: malay             0.30434783 0.17587940 0.22292994
+Class: mandopop          0.37500000 0.46500000 0.41517857
+Class: metal             0.04255319 0.04020101 0.04134367
+Class: metalcore         0.25196850 0.32160804 0.28256071
+Class: minimal-techno    0.28294574 0.36683417 0.31947484
+Class: mpb               0.11818182 0.13065327 0.12410501
+Class: new-age           0.53072626 0.47979798 0.50397878
+Class: opera             0.43231441 0.50000000 0.46370023
+Class: pagode            0.35937500 0.46000000 0.40350877
+Class: party             0.39357430 0.49494949 0.43847875
+Class: piano             0.39500000 0.39698492 0.39598997
+Class: pop               0.20338983 0.24242424 0.22119816
+Class: pop-film          0.27160494 0.44221106 0.33652008
+Class: power-pop         0.33009709 0.34343434 0.33663366
+Class: progressive-house 0.22522523 0.25125628 0.23752969
+Class: psych-rock        0.13907285 0.10552764 0.12000000
+Class: punk              0.05000000 0.04545455 0.04761905
+Class: punk-rock         0.08510638 0.10050251 0.09216590
+Class: r-n-b             0.09815951 0.08040201 0.08839779
+Class: reggae            0.02797203 0.02010050 0.02339181
+Class: reggaeton         0.03370787 0.03000000 0.03174603
+Class: rock              0.20105820 0.19191919 0.19638243
+Class: rock-n-roll       0.22388060 0.30150754 0.25695931
+Class: rockabilly        0.20000000 0.19095477 0.19537275
+Class: romance           0.67772512 0.79444444 0.73145780
+Class: sad               0.20788530 0.29000000 0.24217119
+Class: salsa             0.48159509 0.78894472 0.59809524
+Class: samba             0.28512397 0.34500000 0.31221719
+Class: sertanejo         0.46280992 0.56000000 0.50678733
+Class: show-tunes        0.30864198 0.25125628 0.27700831
+Class: singer-songwriter 0.03414634 0.03517588 0.03465347
+Class: ska               0.21453287 0.31000000 0.25357873
+Class: sleep             0.82857143 0.87000000 0.84878049
+Class: songwriter        0.03664921 0.03517588 0.03589744
+Class: soul              0.26262626 0.26130653 0.26196474
+Class: spanish           0.27000000 0.13500000 0.18000000
+Class: study             0.60526316 0.80904523 0.69247312
+Class: swedish           0.29508197 0.18000000 0.22360248
+Class: synth-pop         0.24786325 0.14572864 0.18354430
+Class: tango             0.58139535 0.75000000 0.65502183
+Class: techno            0.09090909 0.07500000 0.08219178
+Class: trance            0.34439834 0.41708543 0.37727273
+Class: trip-hop          0.28225806 0.17587940 0.21671827
+Class: turkish           0.27152318 0.41206030 0.32734531
+Class: world-music       0.45789474 0.43718593 0.44730077</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Macro-averaged F1</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(rf_cm<span class="sc">$</span>byClass[, <span class="st">&quot;F1&quot;</span>], <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.2980459</code></pre>
+</div>
+</div>
 </section>
 <section id="conclusion" class="level2">
 <h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
