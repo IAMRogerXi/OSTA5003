@@ -2261,18 +2261,6 @@ h1, h2, h3, h4 { font-family: Helvetica, Arial, sans-serif; }
 1    acoustic</code></pre>
 </div>
 </div>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>spotify_df <span class="ot">&lt;-</span> spotify_df[, <span class="sc">-</span><span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>)]</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(spotify_df, <span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>      artists album_name track_name popularity duration_ms explicit
-1 Gen Hoshino     Comedy     Comedy         73      230666    False
-  danceability energy key loudness mode speechiness acousticness
-1        0.676  0.461   1   -6.746    0       0.143       0.0322
-  instrumentalness liveness valence  tempo time_signature track_genre
-1         1.01e-06    0.358   0.715 87.917              4    acoustic</code></pre>
-</div>
-</div>
 <p>Column description:</p>
 <ul>
 <li>track_id: The Spotify ID for the track</li>
@@ -2306,21 +2294,23 @@ h1, h2, h3, h4 { font-family: Helvetica, Arial, sans-serif; }
 </section>
 <section id="initial-data-analysis-and-visualization-of-the-data" class="level2">
 <h2 class="anchored" data-anchor-id="initial-data-analysis-and-visualization-of-the-data">Initial Data Analysis and Visualization of the Data</h2>
+<section id="feature-correlation" class="level4">
+<h4 class="anchored" data-anchor-id="feature-correlation">Feature Correlation</h4>
 <p>Pearson correlation heatmap of the numeric features:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>numeric_features <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;energy&quot;</span>, <span class="st">&quot;loudness&quot;</span>, <span class="st">&quot;danceability&quot;</span>, <span class="st">&quot;speechiness&quot;</span>, </span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>                      <span class="st">&quot;liveness&quot;</span>, <span class="st">&quot;acousticness&quot;</span>, <span class="st">&quot;instrumentalness&quot;</span>, </span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>                      <span class="st">&quot;valence&quot;</span>, <span class="st">&quot;popularity&quot;</span>, <span class="st">&quot;tempo&quot;</span>, <span class="st">&quot;duration_ms&quot;</span>)</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>cor_matrix <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="fu">cor</span>(spotify_df[, numeric_features], <span class="at">use =</span> <span class="st">&quot;complete.obs&quot;</span>), <span class="dv">2</span>)</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">corrplot</span>(cor_matrix, </span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>         <span class="at">method =</span> <span class="st">&quot;color&quot;</span>,</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">type =</span> <span class="st">&quot;upper&quot;</span>,</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>         <span class="at">addCoef.col =</span> <span class="st">&quot;black&quot;</span>,</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>         <span class="at">diag =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>         <span class="at">tl.col =</span> <span class="st">&quot;black&quot;</span>,</span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>         <span class="at">number.cex =</span> <span class="fl">0.8</span>,</span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>         <span class="at">title =</span> <span class="st">&quot;Correlation Heatmap of Features&quot;</span>,</span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>         <span class="at">mar =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">0</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>numeric_features <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;energy&quot;</span>, <span class="st">&quot;loudness&quot;</span>, <span class="st">&quot;danceability&quot;</span>, <span class="st">&quot;speechiness&quot;</span>, </span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>                      <span class="st">&quot;liveness&quot;</span>, <span class="st">&quot;acousticness&quot;</span>, <span class="st">&quot;instrumentalness&quot;</span>, </span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>                      <span class="st">&quot;valence&quot;</span>, <span class="st">&quot;popularity&quot;</span>, <span class="st">&quot;tempo&quot;</span>, <span class="st">&quot;duration_ms&quot;</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>cor_matrix <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="fu">cor</span>(spotify_df[, numeric_features], <span class="at">use =</span> <span class="st">&quot;complete.obs&quot;</span>), <span class="dv">2</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">corrplot</span>(cor_matrix, </span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>         <span class="at">method =</span> <span class="st">&quot;color&quot;</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">type =</span> <span class="st">&quot;upper&quot;</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>         <span class="at">addCoef.col =</span> <span class="st">&quot;black&quot;</span>,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>         <span class="at">diag =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>         <span class="at">tl.col =</span> <span class="st">&quot;black&quot;</span>,</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>         <span class="at">number.cex =</span> <span class="fl">0.8</span>,</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>         <span class="at">title =</span> <span class="st">&quot;Correlation Heatmap of Features&quot;</span>,</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>         <span class="at">mar =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">0</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -2330,23 +2320,134 @@ h1, h2, h3, h4 { font-family: Helvetica, Arial, sans-serif; }
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">assocstats</span>(<span class="fu">table</span>(spotify_df<span class="sc">$</span>key, spotify_df<span class="sc">$</span>mode))<span class="sc">$</span>cramer</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">assocstats</span>(<span class="fu">table</span>(spotify_df<span class="sc">$</span>key, spotify_df<span class="sc">$</span>mode))<span class="sc">$</span>cramer</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 0.2538274</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">assocstats</span>(<span class="fu">table</span>(spotify_df<span class="sc">$</span>mode, spotify_df<span class="sc">$</span>time_signature))<span class="sc">$</span>cramer</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">assocstats</span>(<span class="fu">table</span>(spotify_df<span class="sc">$</span>mode, spotify_df<span class="sc">$</span>time_signature))<span class="sc">$</span>cramer</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 0.02901866</code></pre>
 </div>
 </div>
 </section>
+</section>
 <section id="feature-engineering" class="level2">
 <h2 class="anchored" data-anchor-id="feature-engineering">Feature Engineering</h2>
-<ol type="1">
-<li><p>PCA and Feature Selection</p></li>
-<li><p>Data Cleaning</p></li>
-<li><p>Data Transformation</p></li>
-</ol>
+<section id="data-cleaning" class="level4">
+<h4 class="anchored" data-anchor-id="data-cleaning">Data Cleaning</h4>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>spotify_df <span class="ot">&lt;-</span> spotify_df[, <span class="sc">-</span><span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>)]</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co"># spotify_df$explicit &lt;- as.integer(spotify_df$explicit)</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(<span class="fu">duplicated</span>(spotify_df))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 577</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>spotify_df <span class="ot">&lt;-</span> spotify_df[<span class="sc">!</span><span class="fu">duplicated</span>(spotify_df), ]</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>spotify_df<span class="sc">$</span>key            <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(spotify_df<span class="sc">$</span>key)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>spotify_df<span class="sc">$</span>mode           <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(spotify_df<span class="sc">$</span>mode)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>spotify_df<span class="sc">$</span>time_signature <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(spotify_df<span class="sc">$</span>time_signature)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(spotify_df, <span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      artists album_name track_name popularity duration_ms explicit
+1 Gen Hoshino     Comedy     Comedy         73      230666    False
+  danceability energy key loudness mode speechiness acousticness
+1        0.676  0.461   1   -6.746    0       0.143       0.0322
+  instrumentalness liveness valence  tempo time_signature track_genre
+1         1.01e-06    0.358   0.715 87.917              4    acoustic</code></pre>
+</div>
+</div>
+</section>
+<section id="data-transformation" class="level4">
+<h4 class="anchored" data-anchor-id="data-transformation">Data Transformation</h4>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>artist_freq <span class="ot">&lt;-</span> <span class="fu">table</span>(spotify_df<span class="sc">$</span>artists)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>spotify_df<span class="sc">$</span>name_length     <span class="ot">&lt;-</span> <span class="fu">nchar</span>(spotify_df<span class="sc">$</span>track_name)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>spotify_df<span class="sc">$</span>name_word_count <span class="ot">&lt;-</span> <span class="fu">lengths</span>(<span class="fu">strsplit</span>(spotify_df<span class="sc">$</span>track_name, <span class="st">&quot;</span><span class="sc">\\</span><span class="st">s+&quot;</span>))</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>spotify_df<span class="sc">$</span>has_feat        <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">grepl</span>(<span class="st">&quot;feat</span><span class="sc">\\</span><span class="st">.|ft</span><span class="sc">\\</span><span class="st">.&quot;</span>, spotify_df<span class="sc">$</span>track_name, <span class="at">ignore.case=</span><span class="cn">TRUE</span>))</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>spotify_df<span class="sc">$</span>is_remix        <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">grepl</span>(<span class="st">&quot;remix|edit|mix&quot;</span>, spotify_df<span class="sc">$</span>track_name, <span class="at">ignore.case=</span><span class="cn">TRUE</span>))</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>spotify_df<span class="sc">$</span>is_live         <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">grepl</span>(<span class="st">&quot;live|concert&quot;</span>, spotify_df<span class="sc">$</span>track_name, <span class="at">ignore.case=</span><span class="cn">TRUE</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>spotify_df<span class="sc">$</span>album_is_single <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">grepl</span>(<span class="st">&quot;single|ep&quot;</span>, spotify_df<span class="sc">$</span>album_name, <span class="at">ignore.case=</span><span class="cn">TRUE</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>spotify_df <span class="ot">&lt;-</span> spotify_df[, <span class="sc">!</span>(<span class="fu">names</span>(spotify_df) <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;artists&quot;</span>, <span class="st">&quot;album_name&quot;</span>, <span class="st">&quot;track_name&quot;</span>))]</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(spotify_df, <span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  popularity duration_ms explicit danceability energy key loudness mode
+1         73      230666    False        0.676  0.461   1   -6.746    0
+  speechiness acousticness instrumentalness liveness valence  tempo
+1       0.143       0.0322         1.01e-06    0.358   0.715 87.917
+  time_signature track_genre name_length name_word_count has_feat is_remix
+1              4    acoustic           6               1        0        0
+  is_live album_is_single
+1       0               0</code></pre>
+</div>
+</div>
+</section>
+<section id="pca-and-feature-selection" class="level4">
+<h4 class="anchored" data-anchor-id="pca-and-feature-selection">PCA and Feature Selection</h4>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>pca_features <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;energy&quot;</span>, <span class="st">&quot;danceability&quot;</span>, <span class="st">&quot;speechiness&quot;</span>, </span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>                  <span class="st">&quot;liveness&quot;</span>, <span class="st">&quot;acousticness&quot;</span>, <span class="st">&quot;instrumentalness&quot;</span>, </span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>                  <span class="st">&quot;valence&quot;</span>, <span class="st">&quot;tempo&quot;</span>, <span class="st">&quot;duration_ms&quot;</span>)</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>pca_data <span class="ot">&lt;-</span> spotify_df[, pca_features]</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>pca_data <span class="ot">&lt;-</span> pca_data <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">everything</span>(), <span class="sc">~</span><span class="fu">ifelse</span>(<span class="fu">is.na</span>(.), <span class="fu">mean</span>(., <span class="at">na.rm =</span> <span class="cn">TRUE</span>), .)))</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>pca_data <span class="ot">&lt;-</span> <span class="fu">na.omit</span>(pca_data)</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>pca_result <span class="ot">&lt;-</span> <span class="fu">prcomp</span>(pca_data, <span class="at">center =</span> <span class="cn">TRUE</span>, <span class="at">scale. =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(pca_result)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Importance of components:
+                          PC1    PC2    PC3    PC4     PC5     PC6     PC7
+Standard deviation     1.4821 1.2300 1.1101 0.9851 0.92893 0.90925 0.84950
+Proportion of Variance 0.2441 0.1681 0.1369 0.1078 0.09588 0.09186 0.08018
+Cumulative Proportion  0.2441 0.4122 0.5491 0.6569 0.75279 0.84465 0.92483
+                           PC8     PC9
+Standard deviation     0.68034 0.46222
+Proportion of Variance 0.05143 0.02374
+Cumulative Proportion  0.97626 1.00000</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(pca_result<span class="sc">$</span>rotation[, <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>], <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                    PC1    PC2    PC3    PC4    PC5    PC6
+energy            0.548  0.330  0.010  0.044 -0.017  0.240
+danceability      0.334 -0.444 -0.229  0.369  0.231 -0.089
+speechiness       0.156 -0.056  0.597  0.235  0.633 -0.155
+liveness          0.110  0.171  0.687  0.063 -0.382 -0.009
+acousticness     -0.483 -0.378  0.207 -0.101 -0.013 -0.346
+instrumentalness -0.318  0.298 -0.160  0.213  0.499  0.240
+valence           0.407 -0.434 -0.087 -0.007 -0.121 -0.189
+tempo             0.224  0.279 -0.092 -0.653  0.308 -0.523
+duration_ms      -0.041  0.405 -0.186  0.567 -0.205 -0.651</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>pca_features_new <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(pca_result<span class="sc">$</span>x[, <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>])</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>pc_extracted <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(pca_result<span class="sc">$</span>x[, <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>])</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>df_reduced <span class="ot">&lt;-</span> spotify_df[, <span class="sc">!</span>(<span class="fu">names</span>(spotify_df) <span class="sc">%in%</span> pca_features)]</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>spotify_df <span class="ot">&lt;-</span> <span class="fu">cbind</span>(df_reduced, pc_extracted)</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(spotify_df, <span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  popularity explicit key loudness mode time_signature track_genre name_length
+1         73    False   1   -6.746    0              4    acoustic           6
+  name_word_count has_feat is_remix is_live album_is_single       PC1
+1               1        0        0       0               0 0.6753439
+         PC2       PC3      PC4        PC5       PC6
+1 -0.9597538 0.6230137 1.109366 -0.4924755 0.2562488</code></pre>
+</div>
+</div>
+</section>
 </section>
 <section id="classification-algorithms-used" class="level2">
 <h2 class="anchored" data-anchor-id="classification-algorithms-used">Classification Algorithms Used</h2>

@@ -29,6 +29,7 @@ execute:
 
 library(caret)
 library(corrplot)
+library(dplyr)
 library(ggplot2)
 library(tidyverse)
 library(vcd)
@@ -42,11 +43,6 @@ The modern music industry relies heavily on digital streaming platforms, where a
 
 ```{r}
 spotify_df <- read.csv("dataset/spotify-tracks-dataset.csv")
-head(spotify_df, 1)
-```
-
-```{r}
-spotify_df <- spotify_df[, -c(1, 2)]
 head(spotify_df, 1)
 ```
 
@@ -81,7 +77,7 @@ Group of these features:
 - Text features: track_id, artists, album_name, track_name
 
 ## Initial Data Analysis and Visualization of the Data
-
+#### Feature Correlation
 Pearson correlation heatmap of the numeric features:
 ```{r}
 numeric_features <- c("energy", "loudness", "danceability", "speechiness", 
@@ -105,12 +101,69 @@ assocstats(table(spotify_df$mode, spotify_df$time_signature))$cramer
 ```
 
 ## Feature Engineering
-1. PCA and Feature Selection
+#### Data Cleaning
+```{r}
+spotify_df <- spotify_df[, -c(1, 2)]
+# spotify_df$explicit <- as.integer(spotify_df$explicit)
 
-2. Data Cleaning
+sum(duplicated(spotify_df))
+spotify_df <- spotify_df[!duplicated(spotify_df), ]
 
-3. Data Transformation
+spotify_df$key            <- as.factor(spotify_df$key)
+spotify_df$mode           <- as.factor(spotify_df$mode)
+spotify_df$time_signature <- as.factor(spotify_df$time_signature)
 
+head(spotify_df, 1)
+```
+
+#### Data Transformation
+```{r}
+artist_freq <- table(spotify_df$artists)
+```
+
+```{r}
+spotify_df$name_length     <- nchar(spotify_df$track_name)
+spotify_df$name_word_count <- lengths(strsplit(spotify_df$track_name, "\\s+"))
+spotify_df$has_feat        <- as.integer(grepl("feat\\.|ft\\.", spotify_df$track_name, ignore.case=TRUE))
+spotify_df$is_remix        <- as.integer(grepl("remix|edit|mix", spotify_df$track_name, ignore.case=TRUE))
+spotify_df$is_live         <- as.integer(grepl("live|concert", spotify_df$track_name, ignore.case=TRUE))
+```
+
+```{r}
+spotify_df$album_is_single <- as.integer(grepl("single|ep", spotify_df$album_name, ignore.case=TRUE))
+```
+
+```{r}
+spotify_df <- spotify_df[, !(names(spotify_df) %in% c("artists", "album_name", "track_name"))]
+
+head(spotify_df, 1)
+```
+
+#### PCA and Feature Selection
+```{r}
+pca_features <- c("energy", "danceability", "speechiness", 
+                  "liveness", "acousticness", "instrumentalness", 
+                  "valence", "tempo", "duration_ms")
+
+pca_data <- spotify_df[, pca_features]
+
+pca_data <- pca_data |> mutate(across(everything(), ~ifelse(is.na(.), mean(., na.rm = TRUE), .)))
+
+pca_data <- na.omit(pca_data)
+
+pca_result <- prcomp(pca_data, center = TRUE, scale. = TRUE)
+
+summary(pca_result)
+round(pca_result$rotation[, 1:6], 3)
+
+pca_features_new <- as.data.frame(pca_result$x[, 1:3])
+
+pc_extracted <- as.data.frame(pca_result$x[, 1:6])
+df_reduced <- spotify_df[, !(names(spotify_df) %in% pca_features)]
+spotify_df <- cbind(df_reduced, pc_extracted)
+
+head(spotify_df, 1)
+```
 
 ## Classification Algorithms Used
 eee
