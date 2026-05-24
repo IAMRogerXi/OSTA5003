@@ -36,6 +36,8 @@ library(tidyverse)
 library(vcd)
 library(visdat)
 library(xgboost)
+
+spotify_df <- read.csv("dataset/spotify-tracks-dataset.csv")
 ```
 
 ## Overview of the Problem
@@ -44,7 +46,8 @@ The modern music industry relies heavily on digital streaming platforms, where a
 ## Dataset Description
 
 ```{r}
-spotify_df <- read.csv("dataset/spotify-tracks-dataset.csv")
+dim(spotify_df)
+str(spotify_df)
 head(spotify_df, 1)
 ```
 
@@ -106,7 +109,8 @@ assocstats(table(spotify_df$mode, spotify_df$time_signature))$cramer
 #### Data Cleaning
 ```{r}
 spotify_df <- spotify_df[, -c(1, 2)]
-# spotify_df$explicit <- as.integer(spotify_df$explicit)
+
+spotify_df$explicit <- as.integer(spotify_df$explicit == "True")
 
 sum(duplicated(spotify_df))
 spotify_df <- spotify_df[!duplicated(spotify_df), ]
@@ -169,6 +173,12 @@ head(spotify_df, 1)
 
 ## Classification Algorithms and Model Selection
 Random Forest and XGBoost algorithms were implemented to classify the track genres. Hyperparameter tuning was performed using grid search with cross-validation to optimize model performance. The models were evaluated based on accuracy, precision, recall, and F1-score to determine the best-performing model for genre classification.
+
+- Handle mixed feature types (numeric + categorical) natively
+- No need for feature scaling or normalization
+- Robust to outliers and irrelevant features
+- Capture non-linear interactions automatically
+- Interpretable (feature importance)
 
 ## Model Training and Hyperparameter Tuning
 #### Dataset Splitting
@@ -259,6 +269,35 @@ rf_cm$byClass[, c("Precision", "Recall", "F1")]
 
 # Macro-averaged F1
 mean(rf_cm$byClass[, "F1"], na.rm = TRUE)
+```
+
+```{r}
+# Confusion matrix heatmap for top 20 genres
+top_n <- 20
+
+# Pick top N genres by number of test samples
+top_genres <- names(sort(table(test_df$track_genre), decreasing = TRUE))[1:top_n]
+
+# Subset the confusion matrix table
+cm_table <- as.data.frame(rf_cm$table)
+cm_sub   <- cm_table[cm_table$Reference %in% top_genres & 
+                     cm_table$Prediction %in% top_genres, ]
+
+# Normalise by true class (row) so colour = recall per cell
+cm_sub <- cm_sub |>
+  group_by(Reference) |>
+  mutate(Proportion = Freq / sum(Freq)) |>
+  ungroup()
+
+ggplot(cm_sub, aes(x = Reference, y = Prediction, fill = Proportion)) +
+  geom_tile() +
+  geom_text(aes(label = Freq), size = 2.5, colour = "white") +
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  labs(title = paste("Confusion Matrix — Top", top_n, "Genres (Random Forest)"),
+       x = "True Genre", y = "Predicted Genre", fill = "Recall") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 7),
+        axis.text.y = element_text(size = 7))
 ```
 
 ## Conclusion

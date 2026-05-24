@@ -9,17 +9,19 @@ author:
 format:
     revealjs:
         auto-slide: 20000
-    html:
-        embed-resources: true
-        include-in-header:
+        scrollable: true
+        include-after-body:
             text: |
                 <style>
-                    body { font-family: 'Times New Roman', Times, serif; font-size: 10pt; }
-                    code, pre { font-family: 'Courier New', Courier, monospace; }
-                    h1, h2, h3, h4 { font-family: Helvetica, Arial, sans-serif; }
-                    .footnotes h2::before { content: 'Appendix'; }
-                    .footnotes h2 { visibility: hidden; position: relative; }
-                    .footnotes h2::before { visibility: visible; position: absolute; }
+                    .reveal {
+                        font-family: 'Times New Roman', Times, serif; font-size: 10pt !important;;
+                    }
+                    .reveal h1, .reveal h2, .reveal h3 {
+                        font-family: Helvetica, Arial, sans-serif !important;;
+                    }
+                    .reveal code, .reveal pre {
+                        font-family: 'Courier New', Courier, monospace !important;;
+                    }
                 </style>
 execute:
   message: false
@@ -32,13 +34,13 @@ Music genre classification is a multiclass machine learning problem that aims to
 
 This task is challenging because many genres may share similar musical characteristics. For example, songs from different genres may have similar tempo, energy, or danceability values, making it difficult for a model to distinguish between them. Therefore, both overall performance and class-level errors need to be examined carefully.
 
-### 1.2 Phase 2 Objective
+## 1.2 Phase 2 Objective
 The objective of Phase 2 is to implement the initial Random Forest classification model proposed in Phase 1. The model is trained using selected Spotify audio features and evaluated on a separate test set. The main evaluation metrics include accuracy and F1-score.
 
 In addition to measuring overall performance, this phase also focuses on analysing the model’s prediction errors. A confusion matrix is used to identify which genres are correctly classified and which genres are frequently confused. This provides useful evidence for understanding the strengths and limitations of the initial model.
 
 
-### 1.3 Link to Phase 1 Plan
+## 1.3 Link to Phase 1 Plan
 Phase 2 directly follows the project plan developed in Phase 1. In Phase 1, Random Forest was selected as the main modelling approach, and evaluation metrics such as accuracy, F1-score, and confusion matrix analysis were planned. Phase 2 implements these planned tasks by training the initial model, evaluating its performance, and interpreting the classification results.
 
 Overall, this phase provides the first experimental results of the project and forms the foundation for future model improvement and refinement.
@@ -46,14 +48,20 @@ Overall, this phase provides the first experimental results of the project and f
 ## 2. Data Preparation
 ### 2.1 Dataset Overview
 ```{r}
-library(tidyverse)
-library(caret)
-library(ranger)
-library(yardstick)
-library(ggplot2)
+#| echo: false
+## Hidden code chunk to load libraries without displaying in the report
 
-# Load data
+library(caret)
+library(ggplot2)
+library(ranger)
+library(tidyverse)
+library(yardstick)
+
 spotify_df <- read.csv("dataset/spotify-tracks-dataset.csv")
+```
+
+```{r}
+# Load data
 spotify_df |> dim()
 spotify_df |> str()
 spotify_df |> head()
@@ -61,7 +69,7 @@ spotify_df |> head()
 The Spotify Track Dataset was used in this project to predict the genre of a song based on its track-level and audio features. The target variable is `track_genre` which contains multiple genre categories. Therefore, this task is a multi-classifier task.
 The dataset obtains varies metadata includes numerical and descriptive data. Since the aim is to classify song based on measurable audio characteristcs, the model process would mainly focus on the numerical data.
 
-### 2.2 Feature Selection
+## 2.2 Feature Selection
 ```{r}
 feature_to_remove <- c("X","track_id", "artists", "album_name", "track_name")
 spotify_model <- spotify_df|>
@@ -72,7 +80,7 @@ spotify_model|>str()
 Feature selection was applied to remove variables that were not suitable for the initial Random Forest model. The features such as `track_id`,`artist`, `album_name` and `track_name` do not represent general audio patterns and may reduce the generalisability of the model. Also, the column `X` a default column number whilst read csv. Thus, they were excluded.
 The rest of variable were retained because they describe measurable musical and and audio characteristics that may help distinguish between genres
 
-### 2.3 Data Cleaning
+## 2.3 Data Cleaning
 ```{r}
 spotify_model <- spotify_model|>
   drop_na()|>
@@ -89,7 +97,7 @@ table(spotify_model$track_genre)[1:10]
 ```
 The data cleaning process included examine missing values, confirming correct data types and check the class balance. Missing values in the selected modelling were handled before model training.
 
-### 2.4 Train-Test Split
+## 2.4 Train-Test Split
 ```{r}
 train_index <- createDataPartition(
   spotify_model$track_genre,
@@ -115,7 +123,7 @@ Compare with single decision tree, Random Forest can reduce overfitting and impr
 
 This model is suitable for the Spotify genre classification task because the target variable `track_genre` contains multiple genre categories. Random Forest can handle multiclass classification directly can capture non-linear relationships between audio features and music genres.
 
-### 3.2 Model Training Process >>
+## 3.2 Model Training Process >>
 ```{r}
 set.seed(5003)
 
@@ -150,7 +158,7 @@ The Random Forest training output showed an out-of-bag prediction error of 67.48
 
 Overall, the Random Forest model was successfully trained using 91,200 observations and 15 predictors. The next step is to evaluate the model on the testing dataset using accuracy, F1-score, confusion matrix, and class-level performance measures.
 
-### 3.3 Hyperparameter Settings >>
+## 3.3 Hyperparameter Settings >>
 ```{r}
 rf_model$num.trees
 rf_model$mtry
@@ -202,7 +210,7 @@ The macro F1-score was 0.3255. Since macro F1-score calculates the F1-score for 
 
 Overall, the model shows moderate performance for an initial multiclass classification model. The accuracy and macro F1-score are both around 0.33, suggesting that the model has learned some useful patterns from the Spotify audio features. However, the performance is still limited, which is expected because the dataset contains many genre categories and some genres may share similar audio characteristics. Therefore, further analysis using the confusion matrix is needed to understand which genres are correctly classified and which genres are commonly confused.
 
-### 4.2 Confusion Matrix 
+## 4.2 Confusion Matrix 
 A confusion matrix was generated to further examine the classification performance of the Random Forest model. While accuracy and macro F1-score provide an overall summary of model performance, the confusion matrix gives more detailed information about which genres were correctly predicted and which genres were commonly misclassified.
 ```{r}
 # Confusion Matrix
@@ -219,24 +227,24 @@ In the confusion matrix, the diagonal values represent correct predictions, whil
 The full confusion matrix shows that the model makes predictions across a large number of genre classes. However, because the dataset contains many genre categories, the full matrix is difficult to interpret directly in the report. The R output was also too large to display completely, with part of the printed matrix being omitted. Therefore, a clearer visualisation was created using a normalised heatmap for the top 20 most frequent genres
 
 ```{r}
-cm_top_prop <- test_top |>
-  count(track_genre, predicted_genre_grouped) |>
-  group_by(track_genre) |>
-  mutate(prop = n / sum(n)) |>
-  ungroup()
+# cm_top_prop <- cm_result |>
+#   count(track_genre, predicted_genre_grouped) |>
+#   group_by(track_genre) |>
+#   mutate(prop = n / sum(n)) |>
+#   ungroup()
 
-ggplot(cm_top_prop, aes(x = predicted_genre_grouped, y = track_genre, fill = prop)) +
-  geom_tile() +
-  labs(
-    title = "Normalised Confusion Matrix for Top 20 Genres",
-    x = "Predicted Genre",
-    y = "Actual Genre",
-    fill = "Proportion"
-  ) +
-  theme_minimal() +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1)
-  )
+# ggplot(cm_top_prop, aes(x = predicted_genre_grouped, y = track_genre, fill = prop)) +
+#   geom_tile() +
+#   labs(
+#     title = "Normalised Confusion Matrix for Top 20 Genres",
+#     x = "Predicted Genre",
+#     y = "Actual Genre",
+#     fill = "Proportion"
+#   ) +
+#   theme_minimal() +
+#   theme(
+#     axis.text.x = element_text(angle = 45, hjust = 1)
+#   )
 ```
 In this heatmap, each row represents one actual genre, and each column represents a predicted genre. The colour intensity represents the proportion of predictions assigned to each predicted genre within the same actual genre. Darker cells indicate a higher proportion of predictions. The diagonal cells represent correct classifications, while off-diagonal cells represent misclassifications.
 
@@ -248,11 +256,11 @@ This pattern suggests that the Random Forest model has learned some useful genre
 
 Overall, the normalised heatmap supports the earlier accuracy and macro F1-score results. The initial Random Forest model provides a useful baseline, but further improvement may be needed through hyperparameter tuning, feature engineering, or grouping similar genres.
 
-### 4.3 Class-level Performance
+## 4.3 Class-level Performance
 ```{r}
 ```
 
-### 4.4 Feature Importance
+## 4.4 Feature Importance
 ```{r}
 ```
 
@@ -260,7 +268,7 @@ Overall, the normalised heatmap supports the earlier accuracy and macro F1-score
 ### 5.1 Model Strengthens
 
 
-### 5.2 Error Analysis from Confusion Matrix 
+## 5.2 Error Analysis from Confusion Matrix 
 ```{r}
 # Create a table of incorrect predictions
 error_analysis <- test_results |>
@@ -304,10 +312,10 @@ These high error rates show that some genres are not only misclassified frequent
 
 Overall, the error analysis confirms that the main weakness of the initial Random Forest model is distinguishing between closely related music genres. This supports the need for further improvement, such as feature engineering, hyperparameter tuning, or grouping highly similar genres into broader categories.
 
-### 5.3 Limitaions
+## 5.3 Limitaions
 
 
-### 5.4 Possible Improvements
+## 5.4 Possible Improvements
 
 
 
