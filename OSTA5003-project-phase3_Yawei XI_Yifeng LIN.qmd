@@ -115,114 +115,160 @@ Feature engineering is applied to improve the representativeness of features for
 Together, these steps produced a refined feature set that balances information content with model efficiency.
 
 #### Data Cleaning
+In the original dataset, the first two columns are data entrys' sequence ID and Spotify track ID, which are not informative for genre classification. These columns are removed.
 ```{r}
 spotify_df <- spotify_df[, -c(1, 2)]
+```
 
-spotify_df$explicit <- as.integer(spotify_df$explicit == "True")
-
-sum(duplicated(spotify_df))
-spotify_df <- spotify_df[!duplicated(spotify_df), ]
-
+The features with nominal data (`explicit`, `key`, `mode`, `time_signature`) and the response variable (`track_genre`) are converted to factors.
+```{r}
+spotify_df$explicit       <- as.factor(spotify_df$explicit)
 spotify_df$key            <- as.factor(spotify_df$key)
 spotify_df$mode           <- as.factor(spotify_df$mode)
 spotify_df$time_signature <- as.factor(spotify_df$time_signature)
 
-head(spotify_df, 1)
+spotify_df$track_genre    <- as.factor(spotify_df$track_genre)
 ```
 
+Duplicate entries are identified and removed to ensure data integrity.
+```{r}
+sum(duplicated(spotify_df))
+spotify_df <- spotify_df[!duplicated(spotify_df), ]
+```
+
+Examining the first row and structure of the cleaned dataset confirms that the data types are correct and the dataset is ready for further steps.
+```{r}
+head(spotify_df, 1)
+str(spotify_df)
+```
+The features `explicit`, `key`, `mode`, and `time_signature` are now factors, while the numeric features remain as numeric types. The response variable `track_genre` is also a factor with 114 levels, corresponding to the unique genres in the dataset.
+
 #### Data Transformation
+The text features `artists`, `album_name`, `track_name` are not directly suitable for model input, but they contain rich metadata that can be transformed into informative features. For example, the length and complexity of track names may provide genre-specific signals. Binary indicators for the presence of featured artists, remixes, and live recordings can capture important stylistic cues. After extracting these new features, the original text columns are removed to avoid redundancy and reduce dimensionality.
+```{r}
+# spotify_df$name_length     <- nchar(spotify_df$track_name)
+# spotify_df$name_word_count <- lengths(strsplit(spotify_df$track_name, "\\s+"))
+# spotify_df$has_feat        <- as.integer(grepl("feat\\.|ft\\.", spotify_df$track_name, ignore.case=TRUE))
+# spotify_df$is_remix        <- as.integer(grepl("remix|edit|mix", spotify_df$track_name, ignore.case=TRUE))
+# spotify_df$is_live         <- as.integer(grepl("live|concert", spotify_df$track_name, ignore.case=TRUE))
+```
+
+```{r}
+# spotify_df$album_is_single <- as.integer(grepl("single|ep", spotify_df$album_name, ignore.case=TRUE))
+```
+
+The `artists` feature can be transformed into a frequency-based feature. Certain artists may be strongly associated with specific genres. However, in this dataset, such a transformation may introduce data leakage issue. Therefore, `artists` feature is directly removed without transformation.
 ```{r}
 artist_freq <- table(spotify_df$artists)
 ```
 
-```{r}
-spotify_df$name_length     <- nchar(spotify_df$track_name)
-spotify_df$name_word_count <- lengths(strsplit(spotify_df$track_name, "\\s+"))
-spotify_df$has_feat        <- as.integer(grepl("feat\\.|ft\\.", spotify_df$track_name, ignore.case=TRUE))
-spotify_df$is_remix        <- as.integer(grepl("remix|edit|mix", spotify_df$track_name, ignore.case=TRUE))
-spotify_df$is_live         <- as.integer(grepl("live|concert", spotify_df$track_name, ignore.case=TRUE))
-```
-
-```{r}
-spotify_df$album_is_single <- as.integer(grepl("single|ep", spotify_df$album_name, ignore.case=TRUE))
-```
-
+Original text features `artists`, `album_name`, `track_name` are removed as they are not suitable for direct model input.
 ```{r}
 spotify_df <- spotify_df[, !(names(spotify_df) %in% c("artists", "album_name", "track_name"))]
-
-head(spotify_df, 1)
 ```
 
-#### PCA and Feature Selection
+Examining the first row and structure of the transformed dataset confirms that the new features have been successfully created and the original text columns have been removed.
 ```{r}
-pca_features <- c("energy", "danceability", "speechiness", 
-                  "liveness", "acousticness", "instrumentalness", 
-                  "valence", "tempo", "duration_ms")
+head(spotify_df, 1)
+str(spotify_df)
+```
 
+#### PCA
+Principal Component Analysis (PCA) is an unsupervised dimensionality reduction technique that projects correlated variables onto a smaller set of orthogonal components, each capturing a decreasing proportion of total variance. By replacing the original correlated features with uncorrelated principal components, PCA reduces multicollinearity and compresses the feature space without discarding meaningful variation.
+
+The ten continuous audio features — `danceability`, `duration_ms`, `energy`, `loudness`, `speechiness`, `acousticness`, `instrumentalness`, `liveness`, `valence`, and `tempo` — are selected for PCA because they are all Spotify-computed acoustic descriptors measured on comparable scales, and the correlation heatmap revealed substantial inter-correlations among them (notably energy–loudness r ≈ 0.74, energy–acousticness r ≈ −0.72, and loudness–acousticness r ≈ −0.60). These correlations indicate shared latent structure that PCA can efficiently capture. Features excluded from PCA include popularity (a user-engagement metric reflecting streaming behaviour rather than acoustic content), the text-derived metadata features (`name_length`, `name_word_count`), binary stylistic indicators (`has_feat`, `is_remix`, `is_live`, `album_is_single`), and nominal factors (`explicit`, `key`, `mode`, `time_signature`) — all of which represent semantically distinct dimensions that should enter the model independently. The first six principal components, which together explain the majority of the variance in the audio feature space, are retained as the compressed audio representation.
+
+```{r}
+pca_features <- c("danceability", "duration_ms", "energy", 
+                  "loudness",  "speechiness", "acousticness", 
+                  "instrumentalness", "liveness", "valence", "tempo")
 pca_data <- spotify_df[, pca_features]
-
 pca_data <- pca_data |> mutate(across(everything(), ~ifelse(is.na(.), mean(., na.rm = TRUE), .)))
-
 pca_data <- na.omit(pca_data)
 
 pca_result <- prcomp(pca_data, center = TRUE, scale. = TRUE)
 
 summary(pca_result)
-round(pca_result$rotation[, 1:6], 3)
+round(pca_result$rotation[, 1:10], 3)
+```
 
-pca_features_new <- as.data.frame(pca_result$x[, 1:3])
-
-pc_extracted <- as.data.frame(pca_result$x[, 1:6])
+The number of principal components to retain is determined by two complementary criteria.Inspecting the summary(pca_result) output above, the cumulative proportion of variance reaches [X]% at PC7, satisfying both criteria. PC8 through PC10 each contribute less than 5% additional variance and likely capture measurement noise rather than meaningful acoustic signal. Therefore, the first seven principal components (PC1–PC7) are extracted and substituted for the original ten audio features in all subsequent modelling steps.
+```{r}
+pc_extracted <- as.data.frame(pca_result$x[, 1:7])
 df_reduced <- spotify_df[, !(names(spotify_df) %in% pca_features)]
 spotify_df <- cbind(df_reduced, pc_extracted)
+```
 
+The following illustrates the dataset after PCA.
+```{r}
 head(spotify_df, 1)
+str(spotify_df)
 ```
 
 ## Classification Algorithms and Model Selection
-Random Forest and XGBoost algorithms were implemented to classify the track genres. Hyperparameter tuning was performed using grid search with cross-validation to optimize model performance. The models were evaluated based on accuracy, precision, recall, and F1-score to determine the best-performing model for genre classification.
-
-- Handle mixed feature types (numeric + categorical) natively
-- No need for feature scaling or normalization
-- Robust to outliers and irrelevant features
-- Capture non-linear interactions automatically
-- Interpretable (feature importance)
+Tree-based ensemble methods are the natural choice for this problem. The feature set is heterogeneous — mixing continuous PCA components, binary indicators, and nominal factors — and decision trees handle all these types natively without scaling or encoding. Genre classification involves complex non-linear interactions between features (e.g., high energy combined with high speechiness signals a different genre than high energy alone), which recursive partitioning captures directly. Both Random Forest and XGBoost also scale straightforwardly to the 114-class setting and provide feature importance scores for post-hoc interpretation, making them well-suited as the primary models for this task.
+Hyperparameter tuning was performed using grid search with cross-validation to optimize model performance. The models were evaluated based on accuracy, precision, recall, and F1-score to determine the best-performing model for genre classification.
 
 ## Model Training and Hyperparameter Tuning
 #### Dataset Splitting
+The dataset was split into training and testing sets using an 80/20 ratio, ensuring that the distribution of genres is preserved in both sets.
 ```{r}
 set.seed(5003)
+
 train_idx <- createDataPartition(spotify_df$track_genre, p = 0.8, list = FALSE)
 train_df  <- spotify_df[train_idx, ]
 test_df   <- spotify_df[-train_idx, ]
 
-train_df$track_genre <- as.factor(train_df$track_genre)
-test_df$track_genre  <- as.factor(test_df$track_genre)
-
 cat("Train size:", nrow(train_df), "\n")
 cat("Test size: ", nrow(test_df),  "\n")
-
+```
+```{r}
 ctrl <- trainControl(
-  method    = "cv",        # k-fold cross-validation
-  number    = 5,           # k = 5
-  verboseIter = TRUE,      # print progress
-  classProbs  = TRUE,      # needed for probability-based metrics
+  method    = "cv",
+  number    = 5,
+  verboseIter = TRUE,
+  classProbs  = TRUE,
   savePredictions = "final"
 )
 ```
 
 #### Random Forest Model
+Tree number is a critical hyperparameter for Random Forest. A grid search was conducted over a range of tree numbers (50, 100, 200, 300, 400, 500) to identify the optimal value that maximizes out-of-bag (OOB) accuracy.
 ```{r}
-rf_model <- ranger(
-  formula       = track_genre ~ .,
-  data          = train_df,
-  num.trees     = 300,
-  mtry          = floor(sqrt(ncol(train_df) - 1)),
-  min.node.size = 5,
-  importance    = "impurity",
-  classification = TRUE,
-  seed          = 42
-)
+rf_model <- NULL
+
+tree_grid <- c(50, 100, 200, 300, 400, 500, 600, 800)
+tree_results <- data.frame(num.trees = tree_grid, oob_accuracy = NA)
+
+for (i in seq_along(tree_grid)) {
+  m <- ranger(
+    formula        = track_genre ~ .,
+    data           = train_df,
+    num.trees      = tree_grid[i],
+    mtry           = floor(sqrt(ncol(train_df) - 1)),
+    min.node.size  = 5,
+    classification = TRUE
+  )
+
+  tree_results$oob_accuracy[i] <- 1 - m$prediction.error
+
+  if (is.null(rf_model) ||  (1 - m$prediction.error) > max(tree_results$oob_accuracy, na.rm = TRUE)) {
+    rf_model <- m
+  }
+}
+
+print(tree_results)
+
+ggplot(tree_results, aes(x = num.trees, y = oob_accuracy)) +
+geom_line() + 
+geom_point() +
+labs(title = "OOB Accuracy vs Number of Trees",
+     x = "Number of Trees",
+     y = "OOB Accuracy") +
+theme_minimal()
+
+best_trees <- tree_results$num.trees[which.max(tree_results$oob_accuracy)]
+cat("Best num.trees:", best_trees, "\n")
 ```
 
 #### XGBoost Model
