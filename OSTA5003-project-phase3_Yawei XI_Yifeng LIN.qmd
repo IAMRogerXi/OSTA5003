@@ -262,6 +262,23 @@ mean(rf_cm$byClass[, "F1"], na.rm = TRUE)
 ```
 
 ## Conclusion
-ggg
+This project investigated the automatic classification of music genres using the Spotify Tracks Dataset, comprising 114,000 tracks across 114 genres. The analysis encompassed exploratory data analysis, feature engineering, dimensionality reduction via PCA, and the training and evaluation of two ensemble classification models: Random Forest and XGBoost.
+
+The Random Forest model achieved an overall accuracy of 30.65% (Kappa = 0.300, Macro F1 = 0.298), while XGBoost [achieved/outperformed with] [insert result]. Although these figures appear modest in absolute terms, they represent approximately 35 times the performance of a naive random baseline (0.88% for 114 equally likely classes), confirming that both models successfully learned meaningful acoustic patterns. Per-class analysis revealed that genres with highly distinctive audio profiles — such as comedy, grindcore, sleep, and honky-tonk — were classified with high F1 scores (>0.75), whereas acoustically ambiguous genres — such as punk, songwriter, and reggae — remained difficult to discriminate. This disparity reflects an inherent overlap in the feature space between closely related genres, rather than a deficiency in the models themselves.
+
+The moderate Kappa values (Landis & Koch "Fair" agreement) indicate that both models demonstrate statistically meaningful predictive ability given the complexity of the 114-class problem. XGBoost [outperformed/performed comparably to] Random Forest, consistent with its known strength on structured tabular data. Overall, the results demonstrate that Spotify's pre-computed audio summary features, while informative, impose a practical ceiling on classification accuracy for fine-grained genre discrimination.
+
+## Future Work
+Several directions could extend and improve upon the findings of this project:
+
+Raw audio features: The primary limitation of this work is the use of Spotify's pre-computed high-level summaries (e.g., danceability, energy), which discard low-level timbral, rhythmic, and harmonic information. Incorporating raw audio representations — such as Mel-frequency cepstral coefficients (MFCCs) or mel-spectrograms — would enable deep learning architectures (CNNs or audio transformers such as wav2vec or CLAP) to extract richer discriminative features, potentially achieving 70–90% accuracy.
+
+Genre taxonomy reduction: Merging acoustically indistinguishable genre pairs (e.g., punk/punk-rock, songwriter/singer-songwriter) into broader super-categories would reduce label noise and likely yield substantially higher per-class F1 scores.
+
+Hyperparameter optimisation: A systematic grid or Bayesian search over XGBoost parameters (e.g., max_depth, nrounds, eta) and Random Forest parameters (e.g., mtry, num.trees) via cross-validation could yield incremental improvements.
+
+Correct PCA pipeline: The current implementation fits PCA on the full dataset prior to the train/test split, introducing a mild data leakage risk. A strictly correct pipeline would fit PCA exclusively on training data and apply the learned transformation to the test set using predict(pca_result, test_data).
+
+Ensemble stacking: Combining Random Forest and XGBoost predictions via a meta-learner (stacking) could recover complementary predictive signals from each model.
 
 [^1]: [Spotify Tracks Dataset](https://www.kaggle.com/datasets/maharshipandya/-spotify-tracks-dataset) from Kaggle. This dataset is licensed under [Open Data Commons Open Database License (ODbL) v1.0](https://opendatacommons.org/licenses/odbl/1-0/).

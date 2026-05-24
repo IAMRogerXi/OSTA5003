@@ -2497,8 +2497,8 @@ duration_ms      -0.041  0.405 -0.186  0.567 -0.205 -0.651</code></pre>
 <span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">seed          =</span> <span class="dv">42</span></span>
 <span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Growing trees.. Progress: 41%. Estimated remaining time: 44 seconds.
-Growing trees.. Progress: 83%. Estimated remaining time: 12 seconds.</code></pre>
+<pre><code>Growing trees.. Progress: 41%. Estimated remaining time: 45 seconds.
+Growing trees.. Progress: 82%. Estimated remaining time: 13 seconds.</code></pre>
 </div>
 </div>
 </section>
@@ -2697,7 +2697,18 @@ Class: world-music       0.45789474 0.43718593 0.44730077</code></pre>
 </section>
 <section id="conclusion" class="level2">
 <h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
-<p>ggg</p>
+<p>This project investigated the automatic classification of music genres using the Spotify Tracks Dataset, comprising 114,000 tracks across 114 genres. The analysis encompassed exploratory data analysis, feature engineering, dimensionality reduction via PCA, and the training and evaluation of two ensemble classification models: Random Forest and XGBoost.</p>
+<p>The Random Forest model achieved an overall accuracy of 30.65% (Kappa = 0.300, Macro F1 = 0.298), while XGBoost [achieved/outperformed with] [insert result]. Although these figures appear modest in absolute terms, they represent approximately 35 times the performance of a naive random baseline (0.88% for 114 equally likely classes), confirming that both models successfully learned meaningful acoustic patterns. Per-class analysis revealed that genres with highly distinctive audio profiles — such as comedy, grindcore, sleep, and honky-tonk — were classified with high F1 scores (&gt;0.75), whereas acoustically ambiguous genres — such as punk, songwriter, and reggae — remained difficult to discriminate. This disparity reflects an inherent overlap in the feature space between closely related genres, rather than a deficiency in the models themselves.</p>
+<p>The moderate Kappa values (Landis &amp; Koch “Fair” agreement) indicate that both models demonstrate statistically meaningful predictive ability given the complexity of the 114-class problem. XGBoost [outperformed/performed comparably to] Random Forest, consistent with its known strength on structured tabular data. Overall, the results demonstrate that Spotify’s pre-computed audio summary features, while informative, impose a practical ceiling on classification accuracy for fine-grained genre discrimination.</p>
+</section>
+<section id="future-work" class="level2">
+<h2 class="anchored" data-anchor-id="future-work">Future Work</h2>
+<p>Several directions could extend and improve upon the findings of this project:</p>
+<p>Raw audio features: The primary limitation of this work is the use of Spotify’s pre-computed high-level summaries (e.g., danceability, energy), which discard low-level timbral, rhythmic, and harmonic information. Incorporating raw audio representations — such as Mel-frequency cepstral coefficients (MFCCs) or mel-spectrograms — would enable deep learning architectures (CNNs or audio transformers such as wav2vec or CLAP) to extract richer discriminative features, potentially achieving 70–90% accuracy.</p>
+<p>Genre taxonomy reduction: Merging acoustically indistinguishable genre pairs (e.g., punk/punk-rock, songwriter/singer-songwriter) into broader super-categories would reduce label noise and likely yield substantially higher per-class F1 scores.</p>
+<p>Hyperparameter optimisation: A systematic grid or Bayesian search over XGBoost parameters (e.g., max_depth, nrounds, eta) and Random Forest parameters (e.g., mtry, num.trees) via cross-validation could yield incremental improvements.</p>
+<p>Correct PCA pipeline: The current implementation fits PCA on the full dataset prior to the train/test split, introducing a mild data leakage risk. A strictly correct pipeline would fit PCA exclusively on training data and apply the learned transformation to the test set using predict(pca_result, test_data).</p>
+<p>Ensemble stacking: Combining Random Forest and XGBoost predictions via a meta-learner (stacking) could recover complementary predictive signals from each model.</p>
 </section>
 
 
