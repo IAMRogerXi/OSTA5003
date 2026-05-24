@@ -26,17 +26,27 @@ execute:
 ```{r}
 #| echo: false
 ## Hidden code chunk to load libraries without displaying in the report
-library(tidyverse)
+
+library(caret)
+library(corrplot)
 library(ggplot2)
+library(tidyverse)
+library(vcd)
+library(visdat)
 ```
 
 ## Overview of the Problem
-aaa
+The modern music industry relies heavily on digital streaming platforms, where algorithms continuously analyze massive amounts of audio data to classify, recommend, and organize content. One of the fundamental challenges in this domain is accurately categorizing music into distinct genres based on its acoustic properties. This project focuses on the analysis of the Spotify Tracks dataset[^1], which contains 114,000 observations across 114 unique genres. The primary objective of this project is to build and evaluate a robust classification model capable of predicting the musical genre of a track using its continuous audio features, such as danceability, energy, acousticness, and tempo.
 
 ## Dataset Description
 
 ```{r}
 spotify_df <- read.csv("dataset/spotify-tracks-dataset.csv")
+head(spotify_df, 1)
+```
+
+```{r}
+spotify_df <- spotify_df[, -c(1, 2)]
 head(spotify_df, 1)
 ```
 
@@ -63,8 +73,36 @@ Column description:
 - time_signature: An estimated time signature. The time signature (meter) is a notational convention to specify how many beats are in each bar (or measure). The time signature ranges from 3 to 7 indicating time signatures of 3/4, to 7/4.
 - track_genre: The genre in which the track belongs
 
+Group of these features:
+
+- Nominal data features: explicit, key, mode, time_signature
+- Numerical data features: danceability, energy, loudness, speechiness, acousticness, instrumentalness, liveness, valence, tempo, duration_ms, popularity
+- Ordinal data features: None
+- Text features: track_id, artists, album_name, track_name
+
 ## Initial Data Analysis and Visualization of the Data
-ccc
+
+Pearson correlation heatmap of the numeric features:
+```{r}
+numeric_features <- c("energy", "loudness", "danceability", "speechiness", 
+                      "liveness", "acousticness", "instrumentalness", 
+                      "valence", "popularity", "tempo", "duration_ms")
+cor_matrix <- round(cor(spotify_df[, numeric_features], use = "complete.obs"), 2)
+corrplot(cor_matrix, 
+         method = "color",
+         type = "upper",
+         addCoef.col = "black",
+         diag = FALSE,
+         tl.col = "black",
+         number.cex = 0.8,
+         title = "Correlation Heatmap of Features",
+         mar = c(0,0,1,0))
+```
+
+```{r}
+assocstats(table(spotify_df$key, spotify_df$mode))$cramer
+assocstats(table(spotify_df$mode, spotify_df$time_signature))$cramer
+```
 
 ## Feature Engineering
 1. PCA and Feature Selection
@@ -82,3 +120,5 @@ fff
 
 ## Conclusion
 ggg
+
+[^1]: [Spotify Tracks Dataset](https://www.kaggle.com/datasets/maharshipandya/-spotify-tracks-dataset) from Kaggle. This dataset is licensed under [Open Data Commons Open Database License (ODbL) v1.0](https://opendatacommons.org/licenses/odbl/1-0/).
