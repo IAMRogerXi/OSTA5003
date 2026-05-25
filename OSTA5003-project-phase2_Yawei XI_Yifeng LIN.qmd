@@ -24,43 +24,43 @@ format:
                     }
                 </style>
 execute:
+  echo: true
   message: false
   warning: false
 ---
 
-## 1. Introduction
-### 1.1 Background of the Project
-Music genre classification is a multiclass machine learning problem that aims to predict the genre of a song based on its measurable audio characteristics. In this project, the Spotify Tracks Dataset is used to classify songs according to the target variable `track_genre`. The predictor variables include audio and track-level features such as popularity, duration, danceability, energy, loudness, speechiness, acousticness, instrumentalness, liveness, valence, and tempo.
+## Problem Statement
+Music genre classification is a multiclass supervised learning problem in which a model predicts the genre of a track from its measurable audio characteristics. This project uses the Spotify Tracks Dataset, which comprises 114,000 tracks spanning 114 genre categories, with track_genre as the classification target. Predictor variables include a range of audio and track-level features: popularity, duration, danceability, energy, loudness, speechiness, acousticness, instrumentalness, liveness, valence, and tempo.
 
-This task is challenging because many genres may share similar musical characteristics. For example, songs from different genres may have similar tempo, energy, or danceability values, making it difficult for a model to distinguish between them. Therefore, both overall performance and class-level errors need to be examined carefully.
+The task is inherently difficult because genre boundaries are often acoustically ambiguous — tracks from different genres can exhibit similar distributions of tempo, energy, or danceability, making fine-grained separation challenging. Consequently, evaluation must go beyond aggregate accuracy to include class-level diagnostics that expose where and how the model fails.
 
-## 1.2 Phase 2 Objective
+## Phase 2 Objective
 The objective of Phase 2 is to implement the initial Random Forest classification model proposed in Phase 1. The model is trained using selected Spotify audio features and evaluated on a separate test set. The main evaluation metrics include accuracy and F1-score.
 
 In addition to measuring overall performance, this phase also focuses on analysing the model’s prediction errors. A confusion matrix is used to identify which genres are correctly classified and which genres are frequently confused. This provides useful evidence for understanding the strengths and limitations of the initial model.
 
-
-## 1.3 Link to Phase 1 Plan
+## Link to Phase 1 Plan
 Phase 2 directly follows the project plan developed in Phase 1. In Phase 1, Random Forest was selected as the main modelling approach, and evaluation metrics such as accuracy, F1-score, and confusion matrix analysis were planned. Phase 2 implements these planned tasks by training the initial model, evaluating its performance, and interpreting the classification results.
 
 Overall, this phase provides the first experimental results of the project and forms the foundation for future model improvement and refinement.
 
-## 2. EDA, Data Visualization, and Feature Engineering
-### 2.1 Dataset Overview
+## Dataset Overview
 ```{r}
 #| echo: false
 ## Hidden code chunk to load libraries without displaying in the report
 
 library(caret)
+library(corrplot)
 library(ggplot2)
 library(ranger)
 library(tidyverse)
+library(visdat)
 library(yardstick)
 
 spotify_df <- read.csv("dataset/spotify-tracks-dataset.csv")
 ```
 
-The Spotify Track Dataset was used in this project to predict the genre of a song based on its track-level and audio features. The target variable is `track_genre` which contains multiple genre categories. Therefore, this task is a multi-classifier task.
+The Spotify Track Dataset was used in this project to predict the genre of a song based on its track-level and audio features. The response variable is `track_genre` which contains multiple genre categories. Therefore, this task is a multi-classifier task.
 The dataset obtains varies metadata includes numerical and descriptive data. Since the aim is to classify song based on measurable audio characteristcs, the model process would mainly focus on the numerical data.
 ```{r}
 # Load data
@@ -69,259 +69,282 @@ spotify_df |> str()
 spotify_df |> head()
 ```
 
-## 2.2 Data Cleaning
-```{r}
-#| echo: false
+## Features and Response Variable
+- track_id: The Spotify ID for the track
+- artists: The artists' names who performed the track. If there is more than one artist, they are separated by a ;
+- album_name: The album name in which the track appears
+- track_name: Name of the track
+- popularity: The popularity of a track is a value between 0 and 100, with 100 being the most popular. The popularity is calculated by algorithm and is based, in the most part, on the total number of plays the track has had and how recent those plays are. Generally speaking, songs that are being played a lot now will have a higher popularity than songs that were played a lot in the past. Duplicate tracks (e.g. the same track from a single and an album) are rated independently. Artist and album popularity is derived mathematically from track popularity.
+- duration_ms: The track length in milliseconds
+- explicit: Whether or not the track has explicit lyrics (true = yes it does; false = no it does not OR unknown)
+- danceability: Danceability describes how suitable a track is for dancing based on a combination of musical elements including tempo, rhythm stability, beat strength, and overall regularity. A value of 0.0 is least danceable and 1.0 is most danceable
+- energy: Energy is a measure from 0.0 to 1.0 and represents a perceptual measure of intensity and activity. Typically, energetic tracks feel fast, loud, and noisy. For example, death metal has high energy, while a Bach prelude scores low on the scale
+- key: The key the track is in. Integers map to pitches using standard Pitch Class notation. E.g. 0 = C, 1 = C♯/D♭, 2 = D, and so on. If no key was detected, the value is -1
+- loudness: The overall loudness of a track in decibels (dB)
+- mode: Mode indicates the modality (major or minor) of a track, the type of scale from which its melodic content is derived. Major is represented by 1 and minor is 0
+- speechiness: Speechiness detects the presence of spoken words in a track. The more exclusively speech-like the recording (e.g. talk show, audio book, poetry), the closer to 1.0 the attribute value. Values above 0.66 describe tracks that are probably made entirely of spoken words. Values between 0.33 and 0.66 describe tracks that may contain both music and speech, either in sections or layered, including such cases as rap music. Values below 0.33 most likely represent music and other non-speech-like tracks
+- acousticness: A confidence measure from 0.0 to 1.0 of whether the track is acoustic. 1.0 represents high confidence the track is acoustic
+- instrumentalness: Predicts whether a track contains no vocals. "Ooh" and "aah" sounds are treated as instrumental in this context. Rap or spoken word tracks are clearly "vocal". The closer the instrumentalness value is to 1.0, the greater likelihood the track contains no vocal content
+- liveness: Detects the presence of an audience in the recording. Higher liveness values represent an increased probability that the track was performed live. A value above 0.8 provides strong likelihood that the track is live
+- valence: A measure from 0.0 to 1.0 describing the musical positiveness conveyed by a track. Tracks with high valence sound more positive (e.g. happy, cheerful, euphoric), while tracks with low valence sound more negative (e.g. sad, depressed, angry)
+- tempo: The overall estimated tempo of a track in beats per minute (BPM). In musical terminology, tempo is the speed or pace of a given piece and derives directly from the average beat duration
+- time_signature: An estimated time signature. The time signature (meter) is a notational convention to specify how many beats are in each bar (or measure). The time signature ranges from 3 to 7 indicating time signatures of 3/4, to 7/4.
+- track_genre: The genre in which the track belongs
 
-spotify_model <- spotify_df 
+## Exploratory Data Analysis and Data Visualization
+#### Missing Values
+The dataset contains no missing values, as confirmed by the following visualization.
+```{r}
+vis_miss(spotify_df, warn_large_data = FALSE)
+```
+
+## Exploratory Data Analysis and Data Visualization - Continued
+#### Target Imbalance
+Analysis of the target variable, track_genre, reveals that there are 114 distinct categories. Each category contains exactly 1,000 sample instances. The data is perfectly balanced across all classes.
+```{r}
+genre_counts <- spotify_df |> count(track_genre, sort = TRUE)
+
+head(genre_counts)
+tail(genre_counts)
+```
+
+## Exploratory Data Analysis and Data Visualization - Continued
+#### Feature Distributions
+Danceability exhibits an approximately normal distribution, whereas speechiness is severely right-skewed.
+```{r}
+dp_danceability <- ggplot(spotify_df, aes(x = danceability)) +
+                   geom_density(fill = "lightblue", alpha = 0.7) +
+                   theme_minimal() +
+                   labs(title = "Density Plot of Danceability", x = "Danceability", y = "Density")
+print(dp_danceability)
+```
+
+
+```{r}
+dp_speechiness <- ggplot(spotify_df, aes(x = speechiness)) +
+                  geom_density(fill = "salmon", alpha = 0.7) +
+                  theme_minimal() +
+                  labs(title = "Density Plot of Speechiness (Right-Skewed)", x = "Speechiness", y = "Density")
+print(dp_speechiness)
+```
+
+## Exploratory Data Analysis and Data Visualization - Continued
+#### Feature Correlation
+The heatmap illustrates the correlation between numeric features. Notably, energy and loudness exhibit a very high positive correlation.
+```{r}
+numeric_features <- spotify_df |> select(danceability, energy, loudness, speechiness, acousticness, instrumentalness, liveness, valence, tempo)
+cor_matrix <- cor(numeric_features, use = "complete.obs")
+
+corrplot(cor_matrix, 
+         method = "color",
+         type = "upper",
+         addCoef.col = "black",
+         diag = FALSE,
+         tl.col = "black",
+         number.cex = 0.8,
+         title = "Correlation Heatmap of Features",
+         mar = c(0,0,1,0))
+```
+
+## Feature Engineering
+#### Data Cleaning
+- In the original dataset, the first two columns are data entrys' sequence ID and Spotify track ID, which are not informative for genre classification. These columns are removed.
+```{r}
+spotify_df <- spotify_df[, -c(1, 2)]
+```
+
+- The features with nominal data (`explicit`, `key`, `mode`, `time_signature`) and the response variable (`track_genre`) are converted to factors.
+```{r}
+spotify_df$explicit       <- as.factor(spotify_df$explicit)
+spotify_df$key            <- as.factor(spotify_df$key)
+spotify_df$mode           <- as.factor(spotify_df$mode)
+spotify_df$time_signature <- as.factor(spotify_df$time_signature)
+
+spotify_df$track_genre    <- as.factor(spotify_df$track_genre)
+```
+
+- Duplicate entries are identified and removed to ensure data integrity.
+```{r}
+sum(duplicated(spotify_df))
+spotify_df <- spotify_df[!duplicated(spotify_df), ]
+```
+
+- Examining the first row and structure of the cleaned dataset confirms that the data types are correct and the dataset is ready for further steps.
+```{r}
+head(spotify_df, 1)
+str(spotify_df)
+```
+The features `explicit`, `key`, `mode`, and `time_signature` are now factors, while the numeric features remain as numeric types. The response variable `track_genre` is also a factor with 114 levels, corresponding to the unique genres in the dataset.
+
+## Feature Engineering - Continued
+#### Data Transformation
+- Scale the skewed features `speechiness` and `instrumentalness` using log transformation to reduce skewness and improve model performance.
+```{r}
+spotify_df$speechiness      <- log1p(spotify_df$speechiness)
+spotify_df$instrumentalness <- log1p(spotify_df$instrumentalness)
+```
+
+- The text features `artists`, `album_name`, `track_name` are not directly suitable for model input, but they contain rich metadata that can be transformed into informative features. For example, the length and complexity of track names may provide genre-specific signals. Binary indicators for the presence of featured artists, remixes, and live recordings can capture important stylistic cues. After extracting these new features, the original text columns are removed to avoid redundancy and reduce dimensionality.
+```{r}
+spotify_df$name_length     <- nchar(spotify_df$track_name)
+spotify_df$name_word_count <- lengths(strsplit(spotify_df$track_name, "\\s+"))
+spotify_df$has_feat        <- as.integer(grepl("feat\\.|ft\\.", spotify_df$track_name, ignore.case=TRUE))
+spotify_df$is_remix        <- as.integer(grepl("remix|edit|mix", spotify_df$track_name, ignore.case=TRUE))
+spotify_df$is_live         <- as.integer(grepl("live|concert", spotify_df$track_name, ignore.case=TRUE))
 ```
 
 ```{r}
-spotify_model <- spotify_model |>
-  drop_na() |>
-  mutate(
-    explicit = as.factor(explicit),
-    key = as.factor(key),
-    mode = as.factor(mode),
-    time_signature = as.factor(time_signature),
-    track_genre = as.factor(track_genre)
-  )
-
-sum(is.na(spotify_model))
-table(spotify_model$track_genre)[1:10]
+spotify_df$album_is_single <- as.integer(grepl("single|ep", spotify_df$album_name, ignore.case=TRUE))
 ```
-The data cleaning process included examine missing values, confirming correct data types and check the class balance. Missing values in the selected modelling were handled before model training.
 
-## 2.3 Feature Selection
+- The `artists` feature can be transformed into a frequency-based feature. Certain artists may be strongly associated with specific genres. However, in this dataset, such a transformation may introduce data leakage issue. Therefore, `artists` feature is directly removed without transformation.
 ```{r}
-feature_to_remove <- c("X","track_id", "artists", "album_name", "track_name")
-spotify_model <- spotify_model |> select(-all_of(feature_to_remove))
-
-spotify_model |> str()
+artist_freq <- table(spotify_df$artists)
 ```
-Feature selection was applied to remove variables that were not suitable for the initial Random Forest model. The features such as `track_id`,`artist`, `album_name` and `track_name` do not represent general audio patterns and may reduce the generalisability of the model. Also, the column `X` a default column number whilst read csv. Thus, they were excluded.
-The rest of variable were retained because they describe measurable musical and and audio characteristics that may help distinguish between genres
 
-## 2.4 Train-Test Split
+- Finally, the original text features `artists`, `album_name`, `track_name` are removed as they are not suitable for direct model input.
 ```{r}
-train_index <- createDataPartition(
-  spotify_model$track_genre,
-  p = 0.8,
-)[[1]]
-train_dat <- spotify_model[train_index, ]
-test_dat <- spotify_model[-train_index, ]
-
-train_dat|> dim()
-test_dat|> dim()
+spotify_df <- spotify_df[, !(names(spotify_df) %in% c("artists", "album_name", "track_name"))]
 ```
-After cleaning, the dataset was divided into training and testing sets. The training set was used to fit the Random Forest model, while the testing set was used to evaluate model performance on unseen data.
-An 80/20 train-set split was used, and a random seed was set to ensure reproducibility.
 
-## 3. Methodology
-### 3.1 Model Choice - Random Forest
+Examining the first row and structure of the transformed dataset confirms that the new features have been successfully created and the original text columns have been removed.
 ```{r}
-rf_formula <- track_genre ~.
+head(spotify_df, 1)
+str(spotify_df)
 ```
-Random Forest was selected as the main classification for Phase 2. It is an ensemble learning method that builds multiple decision trees and combines their prediction to produce a final classification result.
+
+## Feature Engineering - Continued
+#### PCA
+- The number of principal components to retain is determined by two complementary criteria.Inspecting the summary(pca_result) output above, the cumulative proportion of variance reaches [X]% at PC7, satisfying both criteria. PC8 through PC10 each contribute less than 5% additional variance and likely capture measurement noise rather than meaningful acoustic signal. Therefore, the first seven principal components (PC1–PC7) are extracted and substituted for the original ten audio features in all subsequent modelling steps.
+```{r}
+pca_features <- c("danceability", "duration_ms", "energy", 
+                  "loudness",  "speechiness", "acousticness", 
+                  "instrumentalness", "liveness", "valence", "tempo")
+pca_data <- spotify_df[, pca_features]
+pca_data <- pca_data |> mutate(across(everything(), ~ifelse(is.na(.), mean(., na.rm = TRUE), .)))
+pca_data <- na.omit(pca_data)
+
+pca_result <- prcomp(pca_data, center = TRUE, scale. = TRUE)
+
+summary(pca_result)
+round(pca_result$rotation[, 1:10], 3)
+```
+
+```{r}
+pc_extracted <- as.data.frame(pca_result$x[, 1:7])
+df_reduced <- spotify_df[, !(names(spotify_df) %in% pca_features)]
+spotify_df <- cbind(df_reduced, pc_extracted)
+```
+
+- The following illustrates the dataset after PCA.
+```{r}
+head(spotify_df, 1)
+str(spotify_df)
+```
+
+## Train-Test Split
+The dataset was split into training and testing sets using an 80/20 ratio, ensuring that the distribution of genres is preserved in both sets.
+```{r}
+set.seed(5003)
+
+train_idx <- createDataPartition(spotify_df$track_genre, p = 0.8, list = FALSE)
+train_df  <- spotify_df[train_idx, ]
+test_df   <- spotify_df[-train_idx, ]
+
+cat("Train size:", nrow(train_df), "\n")
+cat("Test size: ", nrow(test_df),  "\n")
+```
+
+## Model Justification - Random Forest
+Random Forest was selected as the main classification method. It is an ensemble learning method that builds multiple decision trees and combines their prediction to produce a final classification result.
 
 Compare with single decision tree, Random Forest can reduce overfitting and improve model stability.
 
 This model is suitable for the Spotify genre classification task because the target variable `track_genre` contains multiple genre categories. Random Forest can handle multiclass classification directly can capture non-linear relationships between audio features and music genres.
 
-## 3.2 Model Training Process
+## Model Training
 ```{r}
-set.seed(5003)
+# set.seed(5003)
 
-rf_model<-ranger(
-  formula = rf_formula,
-  data = train_dat,
-  num.trees = 300,
-  mtry = floor(sqrt(ncol(train_dat) - 1)),
-  min.node.size = 5,
-  importance = "impurity",
-  classification = TRUE
-)
+# rf_formula <- track_genre ~.
 
-rf_model
+# rf_model<-ranger(
+#   formula = rf_formula,
+#   data = train_dat,
+#   num.trees = 300,
+#   mtry = floor(sqrt(ncol(train_dat) - 1)),
+#   min.node.size = 5,
+#   importance = "impurity",
+#   classification = TRUE
+# )
+
+# rf_model
 ```
 
-After data cleaning and feature selection, the prepared training dataset was used to train the initial Random Forest classification model. The response variable was `track_genre`, and the predictors included 15 selected Spotify audio and track-level features.
-
-The model was trained using the `ranger` package in R, which is suitable for building Random Forest models efficiently on large datasets. In this phase, the training dataset contained 91,200 observations. The model was fitted using 300 trees, with `mtry = 3` and `min.node.size = 5`.
-
-The value of `mtry` was calculated using the common Random Forest rule:
-
-\[
-mtry = \lfloor \sqrt{p} \rfloor
-\]
-
-where \(p\) is the number of predictor variables. Since 15 independent variables were used, the model considered 3 randomly selected variables at each split. This helps reduce correlation between trees and improves the diversity of the forest.
-
-The model used the Gini split rule for classification and impurity-based variable importance. The Gini split rule helps the model choose splits that better separate different genre classes. The impurity-based importance measure was used to identify which Spotify features contributed more strongly to the classification task.
-
-The Random Forest training output showed an out-of-bag prediction error of 67.48%, which means the approximate out-of-bag accuracy was 32.52%. Although this performance is not high, it should be interpreted in the context of a difficult multiclass classification problem. The Spotify dataset contains many genre categories, and some genres may share similar audio characteristics. Therefore, this initial model provides a useful baseline for further evaluation and improvement.
-
-Overall, the Random Forest model was successfully trained using 91,200 observations and 15 predictors. The next step is to evaluate the model on the testing dataset using accuracy, F1-score, confusion matrix, and class-level performance measures.
-
-## 3.3 Hyperparameter Settings
+## Hyperparameter Tunning
+Tree number is a critical hyperparameter for Random Forest. A grid search was conducted over a range of tree numbers (50, 100, 200, 300, 400, 500, 600, 800) to identify the optimal value that maximizes out-of-bag (OOB) accuracy.
 ```{r}
-rf_model$num.trees
-rf_model$mtry
-rf_model$min.node.size
+rf_model <- NULL
+
+tree_grid <- c(50, 100, 200, 300, 400, 500, 600, 800)
+tree_results <- data.frame(num.trees = tree_grid, oob_accuracy = NA)
+
+for (i in seq_along(tree_grid)) {
+  m <- ranger(
+    formula        = track_genre ~ .,
+    data           = train_df,
+    num.trees      = tree_grid[i],
+    mtry           = floor(sqrt(ncol(train_df) - 1)),
+    min.node.size  = 5,
+    classification = TRUE
+  )
+
+  tree_results$oob_accuracy[i] <- 1 - m$prediction.error
+
+  if (is.null(rf_model) || (1 - m$prediction.error) > max(tree_results$oob_accuracy[-i], na.rm = TRUE)) {
+    rf_model <- m
+  }
+}
+
+print(tree_results)
+
+ggplot(tree_results, aes(x = num.trees, y = oob_accuracy)) +
+geom_line() + 
+geom_point() +
+labs(title = "OOB Accuracy vs Number of Trees",
+     x = "Number of Trees",
+     y = "OOB Accuracy") +
+theme_minimal()
+
+best_trees <- tree_results$num.trees[which.max(tree_results$oob_accuracy)]
+cat("Best num.trees:", best_trees, "\n")
 ```
 
-
-### 3.4 Evaluation Metrics
+## Evaluation
 After the Random Forest model was trained, it was used to generate predictions on the testing dataset. The testing dataset was not used during model training, so it provides a more reliable way to evaluate how well the model performs on unseen data.
 
 The prediction was generated using the `predict()` function:
 ```{r}
-rf_pred <- predict(rf_model, data = test_dat)
-
-test_results <- test_dat|>
-  mutate(
-    predicted_genre = rf_pred$predictions
-  )
-
-head(test_results)
+rf_pred <- predict(rf_model, data = test_df)
+  
+rf_cm <- confusionMatrix(rf_pred$predictions, test_df$track_genre)
+rf_cm$overall
+mean(rf_cm$byClass[, "F1"], na.rm = TRUE)
 ```
 
+## Discussion
+The tuned Random Forest model achieved a test accuracy of 30.4% and a macro F1-score of 0.295 across 114 genre classes. These figures must be interpreted in context: a random baseline classifier would achieve only 0.88% accuracy (1/114), meaning the model performs approximately 34 times better than chance.
 
-## 4. Performance Evaluation
-### 4.1 Overall Performance Metrics
-After generating predictions on the testing dataset, the overall performance of the Random Forest model was evaluated using accuracy and macro F1-score.
-```{r}
-# Accuracy
-accuracy_result <- test_results|>
-  accuracy(
-    truth = track_genre,
-    estimate = predicted_genre
-  )
+The Kappa value of 0.298 indicates "Fair" agreement, which is a meaningful result given the extreme difficulty of 114-class classification with high-level audio summary features.
 
-accuracy_result
+## Future Work
+The current phase establishes a baseline Random Forest model. Several directions are planned for the final report:
 
-# F1 score
-f1_result <- test_results|>
-  f_meas(
-    truth = track_genre,
-    estimate = predicted_genre,
-    estimator = "macro"
-  )
-f1_result
-```
-The Random Forest model achieved an accuracy of 0.3335 on the testing dataset. This means that approximately 33.35% of the test observations were correctly classified into their actual music genre.
+- XGBoost: An XGBoost classifier will be trained and evaluated alongside Random Forest. XGBoost's gradient boosting framework and regularisation are expected to outperform the baseline, particularly for acoustically ambiguous genre pairs identified in the error analysis.
 
-The macro F1-score was 0.3255. Since macro F1-score calculates the F1-score for each class and then averages them equally, it is useful for this multiclass classification task. It gives each genre the same importance, regardless of how many observations each genre contains.
+- Feature engineering refinement: Additional transformations — including PCA on log-transformed skewed features and threshold-based binary indicators derived from Spotify's documented feature semantics — will be incorporated and their impact on classification performance assessed.
 
-Overall, the model shows moderate performance for an initial multiclass classification model. The accuracy and macro F1-score are both around 0.33, suggesting that the model has learned some useful patterns from the Spotify audio features. However, the performance is still limited, which is expected because the dataset contains many genre categories and some genres may share similar audio characteristics. Therefore, further analysis using the confusion matrix is needed to understand which genres are correctly classified and which genres are commonly confused.
+- Model comparison and selection: A unified comparison table of accuracy, macro F1-score, and Kappa across all models will be presented in the final report to support a data-driven model selection decision.
 
-## 4.2 Confusion Matrix 
-A confusion matrix was generated to further examine the classification performance of the Random Forest model. While accuracy and macro F1-score provide an overall summary of model performance, the confusion matrix gives more detailed information about which genres were correctly predicted and which genres were commonly misclassified.
-```{r}
-# Confusion Matrix
-cm_result <- test_results|>
-  conf_mat(
-    truth = track_genre,
-    estimate = predicted_genre
-  )
-
-cm_result
-```
-In the confusion matrix, the diagonal values represent correct predictions, while the off-diagonal values represent misclassifications. A higher value on the diagonal indicates that the model classified that genre more accurately. For example, the model correctly classified some genres such as black-metal, bluegrass, and afrobeat, but many other genres were also misclassified into different categories.
-
-The full confusion matrix shows that the model makes predictions across a large number of genre classes. However, because the dataset contains many genre categories, the full matrix is difficult to interpret directly in the report. The R output was also too large to display completely, with part of the printed matrix being omitted. Therefore, a clearer visualisation was created using a normalised heatmap for the top 20 most frequent genres
-
-```{r}
-# cm_top_prop <- cm_result |>
-#   count(track_genre, predicted_genre_grouped) |>
-#   group_by(track_genre) |>
-#   mutate(prop = n / sum(n)) |>
-#   ungroup()
-
-# ggplot(cm_top_prop, aes(x = predicted_genre_grouped, y = track_genre, fill = prop)) +
-#   geom_tile() +
-#   labs(
-#     title = "Normalised Confusion Matrix for Top 20 Genres",
-#     x = "Predicted Genre",
-#     y = "Actual Genre",
-#     fill = "Proportion"
-#   ) +
-#   theme_minimal() +
-#   theme(
-#     axis.text.x = element_text(angle = 45, hjust = 1)
-#   )
-```
-In this heatmap, each row represents one actual genre, and each column represents a predicted genre. The colour intensity represents the proportion of predictions assigned to each predicted genre within the same actual genre. Darker cells indicate a higher proportion of predictions. The diagonal cells represent correct classifications, while off-diagonal cells represent misclassifications.
-
-Some blank areas appear in the heatmap because certain actual-predicted genre combinations did not occur in the test results. In other words, for those genre pairs, the model did not produce any predictions. This is not an error in the visualisation. Instead, it indicates that the corresponding count is zero or that the combination was not generated by the count() function before plotting.
-
-The heatmap shows that some genres have visible correct classification patterns, but many genres are also frequently confused with other categories. In particular, the Other column is relatively strong for several genres. This means that many tracks from the top 20 actual genres were predicted as genres outside the selected top 20 group.
-
-This pattern suggests that the Random Forest model has learned some useful genre-related patterns, but it still struggles with fine-grained multiclass classification. This is reasonable because many music genres share similar audio characteristics, such as tempo, energy, acousticness, danceability, and valence. As a result, audio features alone may not be sufficient to clearly separate all genre categories.
-
-Overall, the normalised heatmap supports the earlier accuracy and macro F1-score results. The initial Random Forest model provides a useful baseline, but further improvement may be needed through hyperparameter tuning, feature engineering, or grouping similar genres.
-
-## 4.3 Class-level Performance
-```{r}
-```
-
-## 4.4 Feature Importance
-```{r}
-```
-
-## 5. Discussion
-### 5.1 Model Strengthens
-
-
-## 5.2 Error Analysis from Confusion Matrix 
-```{r}
-# Create a table of incorrect predictions
-error_analysis <- test_results |>
-  filter(track_genre != predicted_genre) |>
-  count(
-    actual_genre = track_genre,
-    predicted_genre,
-    sort = TRUE
-  )
-
-# Show the most frequent misclassification pairs
-top_error_pairs <- error_analysis |>
-  slice_head(n = 15)
-
-top_error_pairs
-```
-The table above summarises the most frequent misclassification pairs made by the Random Forest model. The largest errors occur between genres that are musically or semantically similar. For example, `songwriter` was often predicted as `singer-songwriter`, and `singer-songwriter` was also frequently predicted as `songwriter`. Similarly, `dub` and `dubstep`, `punk` and `punk-rock`, as well as `edm` and `house` were commonly confused with each other.
-
-These results suggest that the model struggles most when the genre boundaries are very close. This is reasonable because similar genres may share comparable audio characteristics, such as tempo, energy, rhythm, danceability, and acousticness. Therefore, although the Random Forest model can capture some useful patterns, it still has difficulty separating fine-grained genre categories using audio features alone.
-
-
-```{r}
-# Calculate total number of test samples for each actual genre
-genre_totals <- test_results |>
-  count(actual_genre = track_genre, name = "total_actual_count")
-
-# Add error proportion for each actual genre
-top_error_pairs_prop <- error_analysis |>
-  left_join(genre_totals, by = "actual_genre") |>
-  mutate(
-    error_rate_within_actual_genre = n / total_actual_count
-  ) |>
-  arrange(desc(n)) |>
-  slice_head(n = 15)
-
-top_error_pairs_prop
-```
-The second table adds the total number of test samples for each actual genre and calculates the error rate within each actual genre. This provides a clearer interpretation of the seriousness of each misclassification pair. For example, 128 out of 200 `songwriter` tracks were incorrectly predicted as `singer-songwriter`, giving an error rate of 0.640. Similarly, 126 out of 200 `dub` tracks were predicted as `dubstep`, and 122 out of 200 `dubstep` tracks were predicted as `dub`.
-
-These high error rates show that some genres are not only misclassified frequently in absolute count, but also represent a large proportion of all test samples for that actual genre. This indicates strong confusion between closely related genre pairs. In contrast, lower error rates, such as `sad` being predicted as `chill` with an error rate of 0.305, still show noticeable confusion but are less severe than the top-ranked pairs.
-
-Overall, the error analysis confirms that the main weakness of the initial Random Forest model is distinguishing between closely related music genres. This supports the need for further improvement, such as feature engineering, hyperparameter tuning, or grouping highly similar genres into broader categories.
-
-## 5.3 Limitaions
-
-
-## 5.4 Future Work
-
-
-
-## 6. Conclusion
+## Conclusion
+In this phase, we implemented the initial Random Forest model for classifying Spotify tracks into genres based on their audio features. The model was trained on the training dataset and evaluated on a separate test set using accuracy and F1-score as evaluation metrics. The results provide insights into the model's performance and highlight areas for improvement in future phases.

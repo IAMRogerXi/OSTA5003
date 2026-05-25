@@ -257,7 +257,7 @@ for (i in seq_along(tree_grid)) {
 
   tree_results$oob_accuracy[i] <- 1 - m$prediction.error
 
-  if (is.null(rf_model) ||  (1 - m$prediction.error) > max(tree_results$oob_accuracy, na.rm = TRUE)) {
+  if (is.null(rf_model) || (1 - m$prediction.error) > max(tree_results$oob_accuracy[-i], na.rm = TRUE)) {
     rf_model <- m
   }
 }
