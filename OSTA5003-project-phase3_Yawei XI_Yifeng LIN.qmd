@@ -144,17 +144,22 @@ str(spotify_df)
 The features `explicit`, `key`, `mode`, and `time_signature` are now factors, while the numeric features remain as numeric types. The response variable `track_genre` is also a factor with 114 levels, corresponding to the unique genres in the dataset.
 
 #### Data Transformation
+```{r}
+spotify_df$speechiness      <- log1p(spotify_df$speechiness)
+spotify_df$instrumentalness <- log1p(spotify_df$instrumentalness)
+```
+
 The text features `artists`, `album_name`, `track_name` are not directly suitable for model input, but they contain rich metadata that can be transformed into informative features. For example, the length and complexity of track names may provide genre-specific signals. Binary indicators for the presence of featured artists, remixes, and live recordings can capture important stylistic cues. After extracting these new features, the original text columns are removed to avoid redundancy and reduce dimensionality.
 ```{r}
-# spotify_df$name_length     <- nchar(spotify_df$track_name)
-# spotify_df$name_word_count <- lengths(strsplit(spotify_df$track_name, "\\s+"))
-# spotify_df$has_feat        <- as.integer(grepl("feat\\.|ft\\.", spotify_df$track_name, ignore.case=TRUE))
-# spotify_df$is_remix        <- as.integer(grepl("remix|edit|mix", spotify_df$track_name, ignore.case=TRUE))
-# spotify_df$is_live         <- as.integer(grepl("live|concert", spotify_df$track_name, ignore.case=TRUE))
+spotify_df$name_length     <- nchar(spotify_df$track_name)
+spotify_df$name_word_count <- lengths(strsplit(spotify_df$track_name, "\\s+"))
+spotify_df$has_feat        <- as.integer(grepl("feat\\.|ft\\.", spotify_df$track_name, ignore.case=TRUE))
+spotify_df$is_remix        <- as.integer(grepl("remix|edit|mix", spotify_df$track_name, ignore.case=TRUE))
+spotify_df$is_live         <- as.integer(grepl("live|concert", spotify_df$track_name, ignore.case=TRUE))
 ```
 
 ```{r}
-# spotify_df$album_is_single <- as.integer(grepl("single|ep", spotify_df$album_name, ignore.case=TRUE))
+spotify_df$album_is_single <- as.integer(grepl("single|ep", spotify_df$album_name, ignore.case=TRUE))
 ```
 
 The `artists` feature can be transformed into a frequency-based feature. Certain artists may be strongly associated with specific genres. However, in this dataset, such a transformation may introduce data leakage issue. Therefore, `artists` feature is directly removed without transformation.
@@ -233,7 +238,7 @@ ctrl <- trainControl(
 ```
 
 #### Random Forest Model
-Tree number is a critical hyperparameter for Random Forest. A grid search was conducted over a range of tree numbers (50, 100, 200, 300, 400, 500) to identify the optimal value that maximizes out-of-bag (OOB) accuracy.
+Tree number is a critical hyperparameter for Random Forest. A grid search was conducted over a range of tree numbers (50, 100, 200, 300, 400, 500, 600, 800) to identify the optimal value that maximizes out-of-bag (OOB) accuracy.
 ```{r}
 rf_model <- NULL
 
